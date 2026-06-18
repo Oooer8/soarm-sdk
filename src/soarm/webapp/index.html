@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SOARM Web Console</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body data-view="status" data-status-passed="false" data-calibrated="false">
+    <main class="app-shell" aria-label="SOARM Web Console">
+      <header class="app-header">
+        <div class="brand">
+          <span>SOARM SDK</span>
+          <strong>Web Console</strong>
+        </div>
+
+        <ol class="flow-steps" aria-label="setup steps">
+          <li id="stepStatus" class="active available" role="button" tabindex="0" data-step-target="status"><span>1</span>检测</li>
+          <li id="stepCalibration" class="locked" role="button" tabindex="-1" data-step-target="calibration" aria-disabled="true"><span>2</span>标定</li>
+          <li id="stepControl" class="locked" role="button" tabindex="-1" data-step-target="visualizer" aria-disabled="true"><span>3</span>可视化 / 控制</li>
+        </ol>
+
+        <div id="messageBox" class="message-box" role="status">Ready.</div>
+      </header>
+
+      <section class="wizard-page status-page" data-page="status" aria-labelledby="setupTitle">
+        <div class="page-title">
+          <h1 id="setupTitle">串口与状态检测</h1>
+        </div>
+
+        <section class="setup-layout">
+          <div class="tool-panel setup-panel">
+            <div class="config-line">
+              <span>配置文件</span>
+              <strong id="configPath">Loading config...</strong>
+            </div>
+
+            <form id="identityForm" class="form-stack">
+              <label>
+                <span>机械臂名称</span>
+                <input id="armName" name="armName" autocomplete="off" />
+              </label>
+
+              <label>
+                <span>候选串口</span>
+                <select id="portSelect" name="portSelect">
+                  <option value="">未扫描</option>
+                </select>
+              </label>
+
+              <label>
+                <span>手动串口</span>
+                <input id="manualPort" name="manualPort" placeholder="/dev/cu.usbmodem..." />
+              </label>
+
+              <label class="toggle">
+                <input id="mockToggle" type="checkbox" />
+                <span>Mock bus</span>
+              </label>
+
+              <div class="button-grid">
+                <button id="scanPorts" type="button" class="secondary">扫描串口</button>
+                <button id="saveConfig" type="submit" class="secondary">保存配置</button>
+                <button id="checkStatus" type="button">检查状态并进入标定</button>
+              </div>
+            </form>
+
+            <form id="frequencyForm" class="form-stack frequency-form">
+              <div class="config-line">
+                <span>实时频率</span>
+                <strong id="frequencySummary">Loading...</strong>
+              </div>
+              <div class="frequency-grid">
+                <label>
+                  <span>轨迹输入 Hz</span>
+                  <input id="trajectoryInputHz" type="number" min="1" max="240" step="1" />
+                </label>
+                <label>
+                  <span>控制插值 Hz</span>
+                  <input id="controlHz" type="number" min="1" max="400" step="1" />
+                </label>
+                <label>
+                  <span>串口下发 Hz</span>
+                  <input id="serialWriteHz" type="number" disabled />
+                </label>
+                <label>
+                  <span>反馈读取 Hz</span>
+                  <input id="feedbackHz" type="number" min="1" max="400" step="1" />
+                </label>
+                <label>
+                  <span>Web 下发 Hz</span>
+                  <input id="webMotionHz" type="number" min="1" max="120" step="1" />
+                </label>
+                <label>
+                  <span>Web 状态 Hz</span>
+                  <input id="webStateHz" type="number" min="1" max="120" step="1" />
+                </label>
+                <label>
+                  <span>渲染 Hz</span>
+                  <input id="webRenderHz" type="number" min="1" max="240" step="1" />
+                </label>
+              </div>
+              <button id="saveFrequencies" type="submit" class="secondary">保存频率设置</button>
+            </form>
+          </div>
+
+          <section class="status-workspace" aria-live="polite">
+            <div class="status-strip">
+              <div><span>Arm</span><strong id="armLabel">-</strong></div>
+              <div><span>Port</span><strong id="portLabel">-</strong></div>
+              <div><span>Baudrate</span><strong id="baudLabel">-</strong></div>
+              <div><span>Result</span><strong id="resultLabel">未检查</strong></div>
+            </div>
+
+            <div class="report-shell">
+              <div class="report-header">
+                <span>状态报告</span>
+                <span id="reportMode">Idle</span>
+              </div>
+              <div class="joint-grid" id="jointGrid" aria-label="Joint status table"></div>
+              <pre id="reportText">运行状态检查后显示报告。</pre>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <section class="wizard-page calibration-page" data-page="calibration" aria-labelledby="calibrationTitle">
+        <div class="page-title">
+          <h1 id="calibrationTitle">关节标定</h1>
+        </div>
+
+        <section class="calibration-layout">
+          <div class="tool-panel calibration-work">
+            <div class="panel-toolbar">
+              <div>
+                <span>阶段</span>
+                <strong id="calibrationState">Idle</strong>
+              </div>
+              <div class="panel-actions">
+                <button id="startCalibration" type="button">开始</button>
+                <button id="resetCalibration" type="button" class="icon-button" aria-label="重置标定">↺</button>
+              </div>
+            </div>
+
+            <div id="calibrationGate" class="gate-note">先完成串口和状态检查。</div>
+            <p id="calibrationInstruction" class="instruction">禁用扭矩，记录零点，全臂自由摆动一次即可完成标定。</p>
+
+            <div class="calibration-actions">
+              <button id="captureZero" type="button" class="secondary">① 采集零点</button>
+              <button id="startSweep" type="button" class="secondary">② 开始录制</button>
+              <button id="stopSweep" type="button" class="secondary">③ 停止录制</button>
+              <button id="saveCalibration" type="button">保存标定并进入可视化</button>
+            </div>
+
+            <pre id="calibrationReport" class="calibration-report">开始标定后显示 raw encoder ticks。</pre>
+          </div>
+
+          <div class="calibration-table-wrap">
+            <table class="calibration-table">
+              <thead>
+                <tr>
+                  <th>Joint</th>
+                  <th>Zero</th>
+                  <th>Dir</th>
+                  <th>Raw Ticks (Δrange)</th>
+                  <th>Limit Ticks</th>
+                  <th>Limit [min, max] rad</th>
+                  <th>State</th>
+                </tr>
+              </thead>
+              <tbody id="calibrationRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="wizard-page visualizer-page" data-page="visualizer" aria-labelledby="visualizerTitle">
+        <section class="viewport" aria-label="SOARM URDF workspace">
+          <div class="grid-floor" aria-hidden="true"></div>
+          <div class="model-lock" id="modelLock">
+            <span>SOARM URDF</span>
+            <strong>完成标定后显示模型</strong>
+            <p>先检测串口和状态，再完成关节标定。</p>
+          </div>
+
+          <div class="robot-stage" id="robotStage" aria-live="polite">
+            <div id="urdfViewport" class="urdf-viewport" aria-label="SO-ARM101 3D URDF model"></div>
+            <svg id="robotSvg" class="robot-svg" viewBox="0 0 900 620" role="img" aria-label="SOARM URDF pose">
+              <defs>
+                <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <ellipse class="robot-shadow" cx="450" cy="470" rx="170" ry="28"></ellipse>
+              <rect class="robot-base" x="392" y="442" width="116" height="38" rx="9"></rect>
+              <rect id="turntable" class="robot-turntable" x="414" y="412" width="72" height="36" rx="18"></rect>
+              <line id="linkUpper" class="robot-link main" x1="450" y1="414" x2="450" y2="292"></line>
+              <line id="linkForearm" class="robot-link" x1="450" y1="292" x2="558" y2="220"></line>
+              <line id="linkWrist" class="robot-link thin" x1="558" y1="220" x2="646" y2="212"></line>
+              <line id="toolPalm" class="robot-tool" x1="646" y1="212" x2="690" y2="212"></line>
+              <line id="fingerTop" class="robot-finger" x1="690" y1="212" x2="724" y2="192"></line>
+              <line id="fingerBottom" class="robot-finger" x1="690" y1="212" x2="724" y2="232"></line>
+              <circle id="jointBase" class="robot-joint" cx="450" cy="414" r="15"></circle>
+              <circle id="jointShoulder" class="robot-joint active" cx="450" cy="292" r="14"></circle>
+              <circle id="jointElbow" class="robot-joint" cx="558" cy="220" r="12"></circle>
+              <circle id="jointWrist" class="robot-joint small" cx="646" cy="212" r="10"></circle>
+            </svg>
+            <div class="viewport-hints" aria-label="3D 视图操作">
+              <span>滚轮缩放</span>
+              <span>左键拖动旋转</span>
+              <span>Shift / 中键 / 右键拖动平移</span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="control-dock" aria-labelledby="visualizerTitle">
+          <div class="dock-header">
+            <div>
+              <h1 id="visualizerTitle">SOARM 可视化与控制</h1>
+            </div>
+          </div>
+
+          <section class="control-section locked" id="jointPanel" aria-labelledby="jointTitle">
+            <div class="section-header">
+              <h2 id="jointTitle">关节控制</h2>
+              <div class="panel-actions">
+                <button id="readState" type="button" class="secondary">读取实机</button>
+                <label class="switch-toggle torque-toggle">
+                  <input id="torqueToggle" type="checkbox" />
+                  <span class="switch-track" aria-hidden="true"></span>
+                  <span class="switch-label">关节使能</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="segmented">
+              <button type="button" class="selected">弧度</button>
+              <button type="button" disabled>角度</button>
+              <button id="resetPose" type="button">重置</button>
+              <button type="button" disabled>限位</button>
+            </div>
+
+            <div id="syncState" class="sync-state">标定完成后可使用滑条。</div>
+            <div id="jointSliders" class="joint-sliders" aria-label="joint sliders"></div>
+          </section>
+
+          <section class="control-section locked" id="motionPanel" aria-labelledby="motionTitle">
+            <div class="section-header">
+              <h2 id="motionTitle">FK / IK</h2>
+              <button id="solveIk" type="button" class="secondary">求解 IK</button>
+            </div>
+
+            <div class="ik-grid">
+              <label><span>X</span><input id="ikX" type="number" step="0.01" value="0.42" /></label>
+              <label><span>Y</span><input id="ikY" type="number" step="0.01" value="0.00" /></label>
+              <label><span>Z</span><input id="ikZ" type="number" step="0.01" value="0.22" /></label>
+            </div>
+            <pre id="fkReport" class="fk-report">FK/IK 结果会显示在这里。</pre>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/app.js?v=soarm101-frame" defer></script>
+  </body>
+</html>

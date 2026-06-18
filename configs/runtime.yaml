@@ -1,0 +1,11 @@
+arm:
+  control_hz: 200
+  low_voltage: 9.0
+  max_step_rad: 0.75
+  auto_disable: true
+frequencies:
+  trajectory_input_hz: 30
+  feedback_hz: 100
+  web_motion_hz: 30
+  web_state_hz: 30
+  web_render_hz: 60
