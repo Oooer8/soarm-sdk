@@ -28,7 +28,6 @@ soarm = [
   "webapp/*",
   "webapp/vendor/*",
   "assets/brand/*",
-  "assets/soarm/urdf/*",
   "assets/soarm101/urdf/*",
   "assets/soarm101/urdf/assets/*",
 ]
