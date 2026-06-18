@@ -2282,6 +2282,28 @@ button:focus-visible {
   color: var(--muted);
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.app-shell {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.app-sidebar {
+  top: 0;
+  height: 100vh;
+}
+
+.control-dock {
+  max-height: min(760px, calc(100vh - 76px));
+}
+
 @media (max-width: 1180px) {
   .app-header {
     grid-template-columns: 1fr;
