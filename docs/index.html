@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SOARM SDK Documentation</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #5e6b80;
+      --soft: #d9e1ec;
+      --soft-2: #eef2f7;
+      --accent: #0c7a75;
+      --accent-dark: #095d59;
+      --code-bg: #101827;
+      --code-ink: #e7eefb;
+      --warn-bg: #fff7e6;
+      --warn-border: #f3bf57;
+      --ok-bg: #edf9f3;
+      --ok-border: #76c893;
+      --radius: 8px;
+      --shadow: 0 18px 45px rgba(35, 48, 73, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--accent-dark);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      border-right: 1px solid var(--soft);
+      background: #ffffff;
+      padding: 28px 22px;
+    }
+
+    .brand {
+      margin-bottom: 28px;
+    }
+
+    .brand-mark {
+      display: inline-grid;
+      width: 38px;
+      height: 38px;
+      margin-bottom: 14px;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .brand h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .nav-title {
+      margin: 22px 0 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .nav {
+      display: grid;
+      gap: 3px;
+    }
+
+    .nav a {
+      display: block;
+      border-radius: 6px;
+      padding: 7px 9px;
+      color: #2d3a50;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .nav a:hover {
+      background: var(--soft-2);
+      text-decoration: none;
+    }
+
+    .content {
+      min-width: 0;
+    }
+
+    .topbar {
+      display: none;
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      border-bottom: 1px solid var(--soft);
+      background: rgba(255, 255, 255, 0.94);
+      padding: 12px 18px;
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar strong {
+      font-size: 15px;
+    }
+
+    main {
+      max-width: 1060px;
+      padding: 48px 48px 84px;
+    }
+
+    .hero {
+      margin-bottom: 40px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--soft);
+    }
+
+    .hero h2 {
+      max-width: 780px;
+      margin: 0 0 16px;
+      font-size: 44px;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      max-width: 780px;
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.65;
+    }
+
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .quick-links a {
+      display: inline-flex;
+      min-height: 38px;
+      align-items: center;
+      border: 1px solid var(--soft);
+      border-radius: 6px;
+      background: #ffffff;
+      padding: 8px 12px;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 650;
+      box-shadow: 0 4px 12px rgba(35, 48, 73, 0.04);
+    }
+
+    .quick-links a.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    section {
+      margin: 0 0 44px;
+      scroll-margin-top: 28px;
+    }
+
+    section h2 {
+      margin: 0 0 14px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    section h3 {
+      margin: 26px 0 10px;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    ul, ol {
+      padding-left: 22px;
+      margin: 0 0 16px;
+    }
+
+    li {
+      margin: 4px 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin: 18px 0;
+    }
+
+    .panel {
+      border: 1px solid var(--soft);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h3 {
+      margin-top: 0;
+    }
+
+    .callout {
+      border: 1px solid var(--soft);
+      border-radius: var(--radius);
+      background: #ffffff;
+      padding: 16px 18px;
+      margin: 18px 0;
+    }
+
+    .callout.ok {
+      border-color: var(--ok-border);
+      background: var(--ok-bg);
+    }
+
+    .callout.warn {
+      border-color: var(--warn-border);
+      background: var(--warn-bg);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin: 16px 0 22px;
+      border: 1px solid var(--soft);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    table {
+      width: 100%;
+      min-width: 640px;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--soft-2);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f9fbfd;
+      color: #2b374c;
+      font-weight: 750;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    code {
+      border-radius: 5px;
+      background: #e9eef6;
+      padding: 2px 5px;
+      color: #243149;
+      font-size: 0.92em;
+    }
+
+    pre {
+      position: relative;
+      overflow-x: auto;
+      border-radius: var(--radius);
+      background: var(--code-bg);
+      padding: 16px 18px;
+      color: var(--code-ink);
+      box-shadow: 0 14px 34px rgba(16, 24, 39, 0.18);
+    }
+
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .arch {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .layer {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 12px;
+      align-items: stretch;
+      border: 1px solid var(--soft);
+      border-radius: var(--radius);
+      background: #ffffff;
+      padding: 12px;
+    }
+
+    .layer strong {
+      display: flex;
+      align-items: center;
+      border-radius: 6px;
+      background: var(--soft-2);
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+
+    .layer span {
+      padding: 9px 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    footer {
+      margin-top: 58px;
+      padding-top: 20px;
+      border-top: 1px solid var(--soft);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 920px) {
+      .shell {
+        display: block;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      main {
+        padding: 32px 20px 64px;
+      }
+
+      .hero h2 {
+        font-size: 34px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .layer {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hero h2 {
+        font-size: 29px;
+      }
+
+      .hero p {
+        font-size: 16px;
+      }
+
+      section h2 {
+        font-size: 24px;
+      }
+
+      .quick-links a {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Documentation navigation">
+      <div class="brand">
+        <div class="brand-mark">SO</div>
+        <h1>SOARM SDK</h1>
+        <p>Python SDK, CLI, and local web console for a Feetech STS3215 based SOARM.</p>
+      </div>
+      <div class="nav-title">Guide</div>
+      <nav class="nav">
+        <a href="#overview">Overview</a>
+        <a href="#install">Install</a>
+        <a href="#hardware">Hardware</a>
+        <a href="#configuration">Configuration</a>
+        <a href="#bring-up">Bring-Up</a>
+        <a href="#cli">CLI</a>
+        <a href="#web-gui">Web GUI</a>
+        <a href="#teaching">Teaching Replay</a>
+        <a href="#python-api">Python API</a>
+        <a href="#safety">Safety</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#validation">Validation</a>
+      </nav>
+    </aside>
+
+    <div class="content">
+      <div class="topbar">
+        <strong>SOARM SDK Docs</strong>
+        <a href="https://github.com/Oooer8/soarm-sdk#readme">README</a>
+      </div>
+
+      <main>
+        <header class="hero" id="overview">
+          <h2>SOARM SDK Documentation</h2>
+          <p>
+            A practical reference for setting up, calibrating, controlling, visualizing,
+            and debugging a SOARM / SO-ARM101 style robotic arm with Feetech STS3215 servos.
+          </p>
+          <div class="quick-links" aria-label="Quick links">
+            <a class="primary" href="#bring-up">Start Bring-Up</a>
+            <a href="#cli">CLI Reference</a>
+            <a href="#web-gui">Web GUI</a>
+            <a href="#troubleshooting">Troubleshooting</a>
+          </div>
+        </header>
+
+        <section id="install">
+          <h2>Install</h2>
+          <p>Install the package in editable mode from the repository root.</p>
+          <pre><code>pip install -e .</code></pre>
+          <p>This workspace uses the <code>soarm-sdk</code> conda environment for local validation.</p>
+          <pre><code>conda run -n soarm-sdk python -m pip install -e .
+conda run -n soarm-sdk python -m soarm.cli status --config configs/soarm.yaml --mock</code></pre>
+          <div class="callout ok">
+            Mock mode is useful for CLI, Web, and documentation checks. It does not replace real checks for wiring, servo IDs, voltage, torque behavior, or mechanical range.
+          </div>
+        </section>
+
+        <section id="hardware">
+          <h2>Hardware</h2>
+          <p>
+            The current target is a SOARM / SO-ARM101 style arm using Feetech STS3215 servos at 1 Mbps.
+            The SDK talks to the bus through <code>soarm.hardware.ServoBus</code>, backed by <code>scservo_sdk</code>.
+          </p>
+          <p>
+            Servo IDs must already match the YAML configuration. The SDK does not infer joint order from the bus.
+            If several new servos share the factory default ID, connect and rename one servo at a time with vendor or low-level Feetech tooling.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Joint</th><th>Servo ID</th><th>Role</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>shoulder_pan</code></td><td>1</td><td>Base yaw</td></tr>
+                <tr><td><code>shoulder_lift</code></td><td>2</td><td>Shoulder pitch</td></tr>
+                <tr><td><code>elbow_flex</code></td><td>3</td><td>Elbow pitch</td></tr>
+                <tr><td><code>wrist_flex</code></td><td>4</td><td>Wrist pitch</td></tr>
+                <tr><td><code>wrist_roll</code></td><td>5</td><td>Wrist roll</td></tr>
+                <tr><td><code>gripper</code></td><td>6</td><td>Gripper joint</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="configuration">
+          <h2>Configuration</h2>
+          <p><code>configs/soarm.yaml</code> is the shared entry point for CLI, Web, and Python API usage.</p>
+          <pre><code>includes:
+  runtime: runtime.yaml
+  motor_profile: motors/feetech_sts3215.yaml</code></pre>
+          <div class="grid">
+            <div class="panel">
+              <h3><code>configs/soarm.yaml</code></h3>
+              <p>Arm name, serial port, baud rate, joint IDs, calibration, soft limits, and named poses.</p>
+            </div>
+            <div class="panel">
+              <h3><code>configs/runtime.yaml</code></h3>
+              <p>Control frequency, feedback frequency, Web sync/render rates, voltage threshold, and max step.</p>
+            </div>
+            <div class="panel">
+              <h3><code>configs/motors/feetech_sts3215.yaml</code></h3>
+              <p>Feetech register policy: PID, return delay, acceleration, mode, and gripper protection.</p>
+            </div>
+            <div class="panel">
+              <h3>Joint limits</h3>
+              <p><code>max_vel_rad_s</code> and <code>max_acc_rad_s2</code> are joint-space safety and planning limits, not direct per-move Feetech register values.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="bring-up">
+          <h2>First Bring-Up</h2>
+          <ol>
+            <li>Inspect wiring, power, linkage travel, and gripper clearance with power off.</li>
+            <li>Assign servo IDs to match <code>configs/soarm.yaml</code>.</li>
+            <li>Install the SDK and run the mock status command.</li>
+            <li>Scan and save the serial port.</li>
+            <li>Run real <code>status</code> and inspect communication, voltage, raw position, and soft-limit results.</li>
+            <li>If calibration is missing or stale, run calibration.</li>
+            <li>Save calibration and immediately run post-calibration status.</li>
+            <li>Check the Feetech motor profile.</li>
+            <li>Try a small low-speed move or named pose.</li>
+            <li>Open the Web GUI for visual feedback and slider control.</li>
+          </ol>
+          <pre><code>conda run -n soarm-sdk python -m soarm.cli ports --config configs/soarm.yaml
+conda run -n soarm-sdk python -m soarm.cli status --config configs/soarm.yaml
+conda run -n soarm-sdk python -m soarm.cli calibrate --config configs/soarm.yaml --output configs/soarm.yaml
+conda run -n soarm-sdk python -m soarm.cli configure-motors --config configs/soarm.yaml --check-only
+conda run -n soarm-sdk python -m soarm.cli home --config configs/soarm.yaml --duration 2.0</code></pre>
+        </section>
+
+        <section id="cli">
+          <h2>CLI Reference</h2>
+          <h3>Port discovery</h3>
+          <pre><code>soarm ports --config configs/soarm.yaml
+soarm ports --config configs/soarm.yaml --port /dev/cu.usbmodem5A7C1190351
+soarm ports --config configs/soarm.yaml --no-update</code></pre>
+          <h3>Health and calibration</h3>
+          <pre><code>soarm status --config configs/soarm.yaml
+soarm calibrate --config configs/soarm.yaml --output configs/soarm.yaml</code></pre>
+          <h3>Joint reads and motion</h3>
+          <pre><code>soarm read --config configs/soarm.yaml --unit rad
+soarm home --config configs/soarm.yaml --duration 1.5
+soarm move --config configs/soarm.yaml shoulder_pan=0.0 elbow_flex=0.5 --duration 1.0
+soarm pose --config configs/soarm.yaml ready --duration 1.0</code></pre>
+          <h3>Maintenance and debugging</h3>
+          <pre><code>soarm configure-motors --config configs/soarm.yaml --check-only
+soarm configure-motors --config configs/soarm.yaml
+soarm configure-motors --config configs/soarm.yaml --force
+soarm probe-joint shoulder_pan --config configs/soarm.yaml --delta -0.1 --duration 1
+soarm capture-pose --config configs/soarm.yaml ready --output configs/soarm.yaml
+soarm disable --config configs/soarm.yaml</code></pre>
+          <h3>Kinematics</h3>
+          <pre><code>soarm fk --config configs/soarm.yaml shoulder_lift=-0.3 elbow_flex=0.5
+soarm ik --config configs/soarm.yaml 0.42 0.0 0.20</code></pre>
+        </section>
+
+        <section id="web-gui">
+          <h2>Web GUI</h2>
+          <p>Start the local browser console:</p>
+          <pre><code>conda run -n soarm-sdk python -m soarm.cli web --config configs/soarm.yaml --mock</code></pre>
+          <p>Without <code>--mock</code>, the Web server talks to the configured serial bus. The default URL is <code>http://127.0.0.1:8765/</code>.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Phase</th><th>Purpose</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Detect</td><td>Select port, save arm name/port, edit runtime frequencies, and run status.</td></tr>
+                <tr><td>Calibrate</td><td>Disable torque, capture zero, sweep all joints, review new limits, and save calibration.</td></tr>
+                <tr><td>Visualize/control</td><td>Load URDF, stream real joint feedback, enable torque, and send slider targets through SDK safety checks.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout warn">
+            The Web GUI only enters control when a calibration exists, current status passes, and current joint positions are inside saved soft limits.
+          </div>
+        </section>
+
+        <section id="teaching">
+          <h2>Teaching Record And Replay</h2>
+          <p>Record joint-space demonstrations as JSON:</p>
+          <pre><code>soarm record-demo demos/pick_place.json --config configs/soarm.yaml --duration 10 --hz 20
+soarm record-demo demos/elbow_only.json --config configs/soarm.yaml --joints shoulder_pan elbow_flex</code></pre>
+          <p>Validate and replay safely:</p>
+          <pre><code>soarm replay-demo demos/pick_place.json --config configs/soarm.yaml --dry-run
+soarm replay-demo demos/pick_place.json --config configs/soarm.yaml --speed 0.5
+soarm replay-demo demos/pick_place.json --config configs/soarm.yaml --output-hz 200 --interpolation pchip</code></pre>
+          <p>
+            The demonstration format is <code>soarm.demonstration.v1</code>. It stores <code>created_at</code>, <code>metadata</code>, selected joints,
+            and time-stamped radian samples. Replay validates the file, moves through a safety-checked lead-in, interpolates sparse samples to setpoints,
+            and reuses SDK limit checks.
+          </p>
+        </section>
+
+        <section id="python-api">
+          <h2>Python API</h2>
+          <pre><code>from soarm import SOARM
+
+with SOARM.from_config("configs/soarm.yaml") as arm:
+    arm.enable()
+    arm.move_home(duration=1.5)
+    arm.move_joints(
+        {
+            "shoulder_pan": 0.0,
+            "shoulder_lift": -0.4,
+            "elbow_flex": 0.8,
+        },
+        duration=2.0,
+    )
+    print(arm.get_joint_positions())</code></pre>
+          <h3>Demonstration helpers</h3>
+          <pre><code>from soarm import SOARM, record_demonstration, replay_demonstration
+
+with SOARM.from_config("configs/soarm.yaml") as arm:
+    record_demonstration(arm, "demos/pick_place.json", duration=10, sample_hz=20)
+
+with SOARM.from_config("configs/soarm.yaml") as arm:
+    replay_demonstration(arm, "demos/pick_place.json", speed=1.0)</code></pre>
+        </section>
+
+        <section id="safety">
+          <h2>Safety Gates</h2>
+          <p>Use <code>status</code> as the read-only gate before real motion. It checks:</p>
+          <ul>
+            <li>configured servo IDs are online</li>
+            <li>current positions can be read</li>
+            <li>current positions are inside soft limits</li>
+            <li>voltage is above the configured threshold</li>
+          </ul>
+          <p>
+            Calibration readiness is different from control readiness. Old soft limits may fail while communication, voltage,
+            and raw position reads are still healthy enough to recalibrate. Control requires a saved calibration and a passing current status.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Layer</th><th>Default</th><th>Purpose</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Trajectory input</td><td>60 Hz</td><td>High-level targets from policy, user input, or planner.</td></tr>
+                <tr><td>Controller interpolation</td><td>200 Hz</td><td>Convert targets into regular setpoints.</td></tr>
+                <tr><td>Feedback sampling</td><td>100 Hz</td><td>Read and cache real joint state.</td></tr>
+                <tr><td>Web state sync</td><td>30 Hz</td><td>Send cached state to the browser.</td></tr>
+                <tr><td>Web rendering</td><td>60 Hz</td><td>Update the visualization.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="troubleshooting">
+          <h2>Troubleshooting</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Symptom</th><th>Likely cause</th><th>Next step</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Status fails on communication</td>
+                  <td>Wrong serial port, baud rate, cabling, power, or servo ID.</td>
+                  <td>Run <code>soarm ports --config configs/soarm.yaml --no-update</code>, then verify wiring and IDs.</td>
+                </tr>
+                <tr>
+                  <td>Status fails only on soft limits</td>
+                  <td>The arm is outside saved limits or calibration is stale.</td>
+                  <td>Move the arm back into range and rerun status, or recalibrate.</td>
+                </tr>
+                <tr>
+                  <td><code>Goal_Position</code> changes but servo does not move</td>
+                  <td>Torque, operating mode, motor profile, current/load, or command block issue.</td>
+                  <td>Run <code>probe-joint</code> and inspect <code>Torque_Enable</code>, <code>Operating_Mode</code>, <code>Moving</code>, <code>Acceleration</code>, and <code>Goal_Velocity</code>.</td>
+                </tr>
+                <tr>
+                  <td>Replay lead-in reports a large remaining delta</td>
+                  <td>The joint is not following position commands or present-position readback is stale.</td>
+                  <td>Probe the failing joint and slow lead-in with <code>--lead-in-duration</code>.</td>
+                </tr>
+                <tr>
+                  <td>Voltage fails</td>
+                  <td>Power supply is below threshold or unstable.</td>
+                  <td>Do not move until power is corrected, then rerun status.</td>
+                </tr>
+                <tr>
+                  <td>Joint direction or zero looks wrong</td>
+                  <td>Bad zero capture, direction inference, or sweep range.</td>
+                  <td>Stop motion, recalibrate, and verify zero ticks and radian limits before enabling torque.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="architecture">
+          <h2>Architecture</h2>
+          <p>CLI and Web are thin adapters. Shared SDK layers own hardware rules, calibration math, safety, kinematics, and config writes.</p>
+          <div class="arch" aria-label="Architecture layers">
+            <div class="layer"><strong>Applications</strong><span><code>soarm.cli</code>, <code>soarm.web</code>, <code>soarm.webapp</code>, examples, scripts</span></div>
+            <div class="layer"><strong>SDK facade</strong><span><code>soarm.arm.SOARM</code> exposes the user-facing Python API.</span></div>
+            <div class="layer"><strong>Shared workflows</strong><span><code>workflows</code>, <code>diagnostics</code>, <code>calibration</code>, <code>kinematics</code>, <code>demonstration</code></span></div>
+            <div class="layer"><strong>Motion and safety</strong><span><code>motion</code> and <code>safety</code> check limits, voltage, step size, and trajectory feasibility.</span></div>
+            <div class="layer"><strong>Hardware bus</strong><span><code>ServoBus</code> owns register I/O only: sync read, sync write, torque, modes, PID, and profile helpers.</span></div>
+          </div>
+          <div class="callout ok">
+            Keep high-level planning out of <code>ServoBus</code>. Motion planning, retargeting, and safety policy should stay in the motion and SDK layers.
+          </div>
+        </section>
+
+        <section id="validation">
+          <h2>Development And Validation</h2>
+          <p>Use mock checks before touching hardware:</p>
+          <pre><code>conda run -n soarm-sdk python -m soarm.cli status --config configs/soarm.yaml --mock
+conda run -n soarm-sdk python -m soarm.cli fk --config configs/soarm.yaml shoulder_lift=-0.3 elbow_flex=0.5
+conda run -n soarm-sdk python -m soarm.cli ik --config configs/soarm.yaml 0.42 0.0 0.20
+conda run -n soarm-sdk python -m soarm.cli record-demo /tmp/soarm-demo.json --config configs/soarm.yaml --mock --duration 1
+conda run -n soarm-sdk python -m soarm.cli replay-demo /tmp/soarm-demo.json --config configs/soarm.yaml --dry-run</code></pre>
+          <p>When changing code, keep these boundaries intact:</p>
+          <ul>
+            <li><code>ServoBus</code> owns register I/O only.</li>
+            <li><code>SOARM</code> exposes the public SDK facade.</li>
+            <li>Motion planning and safety live outside the hardware bus layer.</li>
+            <li>CLI and Web call shared workflow/API code instead of duplicating calibration math, safety gates, FK/IK, or config writes.</li>
+          </ul>
+        </section>
+
+        <footer>
+          SOARM SDK documentation. This page is intentionally self-contained so the repository has one README and one detailed documentation page.
+        </footer>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
