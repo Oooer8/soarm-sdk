@@ -1,8 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="src/soarm/assets/brand/soarm-logo-dark.svg">
-    <img src="src/soarm/assets/brand/soarm-logo.svg" alt="SOARM SDK logo" width="460">
-  </picture>
+  <img src="src/soarm/assets/brand/soarm_horizontal_lockup.svg" alt="SOARM SDK logo" width="560">
 </p>
 
 # SOARM SDK

@@ -13,9 +13,12 @@
       --muted: #5e6b80;
       --soft: #d9e1ec;
       --soft-2: #eef2f7;
-      --accent: #0c7a75;
-      --accent-dark: #095d59;
-      --accent-ink: #ffffff;
+      --accent: #f3b316;
+      --accent-dark: #885c06;
+      --accent-ink: #101418;
+      --brand-dark: #141b21;
+      --logo-bg: #ffffff;
+      --logo-border: #e3e7ec;
       --code-bg: #101827;
       --code-ink: #e7eefb;
       --warn-bg: #fff7e6;
@@ -34,9 +37,12 @@
         --muted: #aab4c0;
         --soft: #303842;
         --soft-2: #222830;
-        --accent: #58d7cb;
-        --accent-dark: #7ee5dc;
-        --accent-ink: #071312;
+        --accent: #ffca3a;
+        --accent-dark: #ffd75d;
+        --accent-ink: #111315;
+        --brand-dark: #f2f5f7;
+        --logo-bg: #ffffff;
+        --logo-border: #3a4249;
         --code-bg: #080c12;
         --code-ink: #edf6ff;
         --warn-bg: #2f2614;
@@ -57,7 +63,9 @@
 
     body {
       margin: 0;
-      background: var(--bg);
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 34%),
+        var(--bg);
       color: var(--ink);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 16px;
@@ -75,7 +83,7 @@
 
     .shell {
       display: grid;
-      grid-template-columns: 280px minmax(0, 1fr);
+      grid-template-columns: 308px minmax(0, 1fr);
       min-height: 100vh;
     }
 
@@ -93,27 +101,27 @@
       margin-bottom: 28px;
     }
 
-    .brand-mark {
-      display: inline-grid;
-      width: 38px;
-      height: 38px;
-      margin-bottom: 14px;
-      place-items: center;
+    .brand-logo {
+      display: block;
+      margin-bottom: 15px;
+      border: 1px solid var(--logo-border);
       border-radius: 8px;
-      background: var(--accent);
-      color: var(--accent-ink);
-      font-weight: 800;
-      letter-spacing: 0;
+      background: var(--logo-bg);
+      padding: 10px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
     }
 
-    .brand-mark svg {
-      width: 24px;
-      height: 24px;
+    .brand-logo img {
+      display: block;
+      width: 100%;
+      height: auto;
     }
 
-    .brand h1 {
+    .brand h1,
+    .brand-name {
       margin: 0 0 6px;
       font-size: 22px;
+      font-weight: 760;
       line-height: 1.2;
     }
 
@@ -168,6 +176,22 @@
       backdrop-filter: blur(12px);
     }
 
+    .topbar-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .topbar-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid var(--logo-border);
+      background: var(--logo-bg);
+      object-fit: contain;
+    }
+
     .topbar strong {
       font-size: 15px;
     }
@@ -178,15 +202,31 @@
     }
 
     .hero {
-      margin-bottom: 40px;
-      padding-bottom: 28px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.82fr);
+      gap: 28px;
+      align-items: stretch;
+      margin-bottom: 34px;
+      padding-bottom: 34px;
       border-bottom: 1px solid var(--soft);
     }
 
-    .hero h2 {
+    .hero-logo {
+      display: block;
+      width: min(520px, 100%);
+      height: auto;
+      margin: 0 0 24px;
+      border: 1px solid var(--logo-border);
+      border-radius: 8px;
+      background: var(--logo-bg);
+      padding: 12px;
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.1);
+    }
+
+    .hero h1 {
       max-width: 780px;
       margin: 0 0 16px;
-      font-size: 44px;
+      font-size: 46px;
       line-height: 1.08;
       letter-spacing: 0;
     }
@@ -197,6 +237,93 @@
       color: var(--muted);
       font-size: 18px;
       line-height: 1.65;
+    }
+
+    .hero-panel {
+      display: grid;
+      align-content: start;
+      gap: 16px;
+      min-width: 0;
+      border: 1px solid var(--soft);
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--panel) 92%, var(--accent) 8%);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-panel h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    .flow-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .flow-list li {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      margin: 0;
+    }
+
+    .flow-list b {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--brand-dark);
+      color: var(--bg);
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .flow-list strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .flow-list span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 0 0 44px;
+    }
+
+    .signal {
+      min-width: 0;
+      border-top: 3px solid var(--accent);
+      background: color-mix(in srgb, var(--panel) 90%, transparent);
+      padding: 14px 0 0;
+    }
+
+    .signal strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .signal span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
     }
 
     .quick-links {
@@ -412,11 +539,19 @@
         padding: 32px 20px 64px;
       }
 
-      .hero h2 {
-        font-size: 34px;
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 36px;
       }
 
       .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .signal-grid {
         grid-template-columns: 1fr;
       }
 
@@ -426,7 +561,7 @@
     }
 
     @media (max-width: 560px) {
-      .hero h2 {
+      .hero h1 {
         font-size: 29px;
       }
 
@@ -467,15 +602,10 @@
   <div class="shell">
     <aside class="sidebar" aria-label="Documentation navigation">
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" focusable="false">
-            <path d="M7 22h8l4-10 6 4 3-8" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="7" cy="22" r="2.4" fill="currentColor"/>
-            <circle cx="19" cy="12" r="2.4" fill="currentColor"/>
-            <circle cx="28" cy="8" r="2.4" fill="currentColor"/>
-          </svg>
-        </div>
-        <h1>SOARM SDK</h1>
+        <a class="brand-logo" href="#overview" aria-label="SOARM SDK documentation home">
+          <img src="assets/brand/soarm_horizontal_lockup.svg?v=20260618-current-logo" alt="SOARM SDK">
+        </a>
+        <div class="brand-name">SOARM SDK</div>
         <p>Python SDK, CLI, and local web console for a Feetech STS3215 based SOARM.</p>
       </div>
       <div class="nav-title">Guide</div>
@@ -498,24 +628,44 @@
 
     <div class="content">
       <div class="topbar">
-        <strong>SOARM SDK Docs</strong>
+        <div class="topbar-brand">
+          <img class="topbar-mark" src="assets/brand/soarm-mark.svg?v=20260618-current-logo" alt="" aria-hidden="true">
+          <strong>SOARM SDK Docs</strong>
+        </div>
         <a href="https://github.com/Oooer8/soarm-sdk#readme">README</a>
       </div>
 
       <main>
         <header class="hero" id="overview">
-          <h2>SOARM SDK Documentation</h2>
-          <p>
-            A practical reference for setting up, calibrating, controlling, visualizing,
-            and debugging a SOARM / SO-ARM101 style robotic arm with Feetech STS3215 servos.
-          </p>
-          <div class="quick-links" aria-label="Quick links">
-            <a class="primary" href="#bring-up">Start Bring-Up</a>
-            <a href="#cli">CLI Reference</a>
-            <a href="#web-gui">Web GUI</a>
-            <a href="#troubleshooting">Troubleshooting</a>
+          <div class="hero-copy">
+            <img class="hero-logo" src="assets/brand/soarm_horizontal_lockup.svg?v=20260618-current-logo" alt="SOARM SDK">
+            <h1>SOARM SDK Documentation</h1>
+            <p>
+              A practical reference for setting up, calibrating, controlling, visualizing,
+              and debugging a SOARM / SO-ARM101 style robotic arm with Feetech STS3215 servos.
+            </p>
+            <div class="quick-links" aria-label="Quick links">
+              <a class="primary" href="#bring-up">Start Bring-Up</a>
+              <a href="#cli">CLI Reference</a>
+              <a href="#web-gui">Web GUI</a>
+              <a href="#troubleshooting">Troubleshooting</a>
+            </div>
           </div>
+          <aside class="hero-panel" aria-label="Bring-up path">
+            <h2>Bring-up path</h2>
+            <ol class="flow-list">
+              <li><b>1</b><div><strong>Detect</strong><span>Find the serial port, save identity, and run read-only status.</span></div></li>
+              <li><b>2</b><div><strong>Calibrate</strong><span>Capture zero, sweep joints, review soft limits, then save YAML.</span></div></li>
+              <li><b>3</b><div><strong>Control</strong><span>Enable torque only after status, calibration, voltage, and limits pass.</span></div></li>
+            </ol>
+          </aside>
         </header>
+
+        <div class="signal-grid" aria-label="Documentation highlights">
+          <div class="signal"><strong>One SDK surface</strong><span>Python API, CLI, local Web GUI, calibration, motion, and safety share the same config.</span></div>
+          <div class="signal"><strong>Read-first workflow</strong><span>Status and mock checks come before live calibration or motion.</span></div>
+          <div class="signal"><strong>GitHub Pages ready</strong><span>The public docs page ships with its own brand assets under <code>docs/assets</code>.</span></div>
+        </div>
 
         <section id="install">
           <h2>Install</h2>
