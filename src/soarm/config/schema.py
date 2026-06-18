@@ -7,7 +7,7 @@ from typing import Any, Mapping
 
 import yaml
 
-from .constants import (
+from ..constants import (
     DEFAULT_BAUDRATE,
     DEFAULT_CONTROL_HZ,
     DEFAULT_FEEDBACK_HZ,
@@ -18,8 +18,8 @@ from .constants import (
     DEFAULT_WEB_RENDER_HZ,
     DEFAULT_WEB_STATE_HZ,
 )
-from .errors import ConfigurationError
-from .model import JointConfig, Pose
+from ..errors import ConfigurationError
+from ..model import JointConfig, Pose
 
 
 def _optional_int(value: Any) -> int | None:

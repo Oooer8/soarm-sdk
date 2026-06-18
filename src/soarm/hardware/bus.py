@@ -195,6 +195,10 @@ class ServoBus:
         if error:
             raise HardwareError(f"{context}: {self._format_error(error)}")
 
+    def _bus_io_error(self, context: str, exc: Exception) -> HardwareError:
+        port = self.port or "<auto>"
+        return HardwareError(f"{context} on servo bus {port}: {exc}")
+
     def _read_raw(self, servo_id: int, register: Register) -> tuple[int, int, int]:
         packet = self._require_packet()
         if register.size == 1:
@@ -277,7 +281,15 @@ class ServoBus:
 
     def read_register(self, name: str, servo_id: int, *, raw: bool = False) -> int:
         register = get_register(name)
-        value, result, error = self._read_raw(int(servo_id), register)
+        try:
+            value, result, error = self._read_raw(int(servo_id), register)
+        except HardwareError:
+            raise
+        except Exception as exc:
+            raise self._bus_io_error(
+                f"Failed to read {register.name} from servo {servo_id}",
+                exc,
+            ) from exc
         self._check_comm(result, error, f"Failed to read {register.name} from servo {servo_id}")
         return self._decode(value, register, raw=raw)
 
@@ -297,7 +309,15 @@ class ServoBus:
         value = self._encode(int(value), register)
         if unlock:
             self.unlock_eeprom(servo_id)
-        result, error = self._write_raw(servo_id, register, value, tx_only=tx_only)
+        try:
+            result, error = self._write_raw(servo_id, register, value, tx_only=tx_only)
+        except HardwareError:
+            raise
+        except Exception as exc:
+            raise self._bus_io_error(
+                f"Failed to write {register.name} on servo {servo_id}",
+                exc,
+            ) from exc
         self._check_comm(result, error, f"Failed to write {register.name} on servo {servo_id}")
         return True
 
@@ -341,7 +361,14 @@ class ServoBus:
         register = get_register(name)
         ids = [int(servo_id) for servo_id in (ids or self.servo_ids)]
         reader = self._sync_reader(register, ids, strict=strict)
-        result = int(reader.txRxPacket())
+        try:
+            result = int(reader.txRxPacket())
+        except HardwareError:
+            raise
+        except Exception as exc:
+            if strict:
+                raise self._bus_io_error(f"Failed to sync read {register.name}", exc) from exc
+            return {servo_id: None for servo_id in ids}
         if not self._comm_success(result):
             if strict:
                 raise HardwareError(f"Failed to sync read {register.name}: {self._format_comm(result)}")
@@ -391,14 +418,19 @@ class ServoBus:
             results[servo_id] = True
         if not param or not all(results.values()):
             return results
-        result = int(
-            packet.syncWriteTxOnly(
-                register.address,
-                register.size,
-                param,
-                len(param),
+        try:
+            result = int(
+                packet.syncWriteTxOnly(
+                    register.address,
+                    register.size,
+                    param,
+                    len(param),
+                )
             )
-        )
+        except HardwareError:
+            raise
+        except Exception as exc:
+            raise self._bus_io_error(f"Failed to sync write {register.name}", exc) from exc
         if not self._comm_success(result):
             raise HardwareError(f"Failed to sync write {register.name}: {self._format_comm(result)}")
         return results
@@ -583,14 +615,19 @@ class ServoBus:
 
         if not param or not all(results.values()):
             return results
-        result = int(
-            packet.syncWriteTxOnly(
-                _ACCELERATION_REGISTER.address,
-                _POSITION_COMMAND_SIZE,
-                param,
-                len(param),
+        try:
+            result = int(
+                packet.syncWriteTxOnly(
+                    _ACCELERATION_REGISTER.address,
+                    _POSITION_COMMAND_SIZE,
+                    param,
+                    len(param),
+                )
             )
-        )
+        except HardwareError:
+            raise
+        except Exception as exc:
+            raise self._bus_io_error("Failed to sync write position command", exc) from exc
         if not self._comm_success(result):
             raise HardwareError(f"Failed to sync write position command: {self._format_comm(result)}")
         for servo_id in positions:

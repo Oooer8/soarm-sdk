@@ -84,8 +84,22 @@ configs/       Example SOARM, runtime, and motor-profile configs
 docs/          Single-page documentation site
 examples/      Small Python API examples
 scripts/       Bench and measurement utilities
-src/soarm/     SDK, CLI, web server, web app, assets, and tests helpers
+src/soarm/     Python package
+  application/ Web/CLI payload and workflow helpers
+  calibration/ Calibration capture and sweep logic
+  cli/         Command-line entry point and command dispatch
+  config/      YAML schema, split-config loading, and persistence
+  demonstration/
+               Demonstration data, validation, recording, and replay
+  hardware/    Feetech bus, registers, units, and motor profile writes
+  kinematics/  SOARM FK/IK helpers
+  model/       Shared dataclasses for joints, poses, and state
+  motion/      Trajectory generation and motion controller
+  safety/      Joint, step, velocity, acceleration, and voltage guards
+  testing/     Mock bus for no-hardware validation
 ```
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the package layering and import rules.
 
 ## License
 

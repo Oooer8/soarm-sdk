@@ -20,7 +20,7 @@ from .diagnostics import calibration_ready_from_report
 from .errors import SOARMError
 from .hardware import ServoBus
 from .model import JointState
-from .workflows import (
+from .application.workflows import (
     apply_sweep_calibration,
     config_payload,
     fk_payload,

@@ -15,7 +15,11 @@ from .errors import CalibrationError, ConfigurationError, UnsupportedFeature
 from .hardware import ServoBus
 from .kinematics import forward_kinematics, home_positions, solve_position_ik
 from .model import ArmState, JointState
-from .motor_profile import MotorProfileResult, apply_motor_profile, motor_profile_requires_torque_disabled
+from .hardware.motor_profile import (
+    MotorProfileResult,
+    apply_motor_profile,
+    motor_profile_requires_torque_disabled,
+)
 from .motion import InterpolationMode, MotionController, TimedJointTrajectory, TrajectoryPoint
 from .safety import SafetyGuard
 from .testing import MockBus

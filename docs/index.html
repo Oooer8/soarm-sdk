@@ -1384,13 +1384,16 @@ with SOARM.from_config("configs/soarm.yaml") as arm:
 
         <section id="architecture">
           <h2>Architecture</h2>
-          <p>CLI and Web are thin adapters. Shared SDK layers own hardware rules, calibration math, safety, kinematics, and config writes.</p>
+          <p>CLI and Web are thin adapters. Shared SDK layers own configuration, hardware rules, calibration math, safety, kinematics, teaching replay, and config writes.</p>
           <div class="arch" aria-label="Architecture layers">
             <div class="layer"><strong>Applications</strong><span><code>soarm.cli</code>, <code>soarm.web</code>, <code>soarm.webapp</code>, examples, scripts</span></div>
+            <div class="layer"><strong>Application helpers</strong><span><code>soarm.application</code> builds Web/CLI payloads and workflow state.</span></div>
+            <div class="layer"><strong>Teaching</strong><span><code>soarm.demonstration</code> owns demonstration JSON data, validation, recording, and replay.</span></div>
             <div class="layer"><strong>SDK facade</strong><span><code>soarm.arm.SOARM</code> exposes the user-facing Python API.</span></div>
-            <div class="layer"><strong>Shared workflows</strong><span><code>workflows</code>, <code>diagnostics</code>, <code>calibration</code>, <code>kinematics</code>, <code>demonstration</code></span></div>
+            <div class="layer"><strong>Robot domain</strong><span><code>diagnostics</code>, <code>calibration</code>, <code>kinematics</code>, <code>motion</code>, and <code>safety</code></span></div>
             <div class="layer"><strong>Motion and safety</strong><span><code>motion</code> and <code>safety</code> check limits, voltage, step size, and trajectory feasibility.</span></div>
-            <div class="layer"><strong>Hardware bus</strong><span><code>ServoBus</code> owns register I/O only: sync read, sync write, torque, modes, PID, and profile helpers.</span></div>
+            <div class="layer"><strong>Hardware bus</strong><span><code>soarm.hardware</code> owns register I/O, units, torque, modes, PID, and motor profile writes.</span></div>
+            <div class="layer"><strong>Data and config</strong><span><code>soarm.model</code> and <code>soarm.config</code> define dataclasses, YAML schema, and split-config persistence.</span></div>
           </div>
           <div class="callout ok">
             Keep high-level planning out of <code>ServoBus</code>. Motion planning, retargeting, and safety policy should stay in the motion and SDK layers.

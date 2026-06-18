@@ -8,13 +8,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping, TYPE_CHECKING
 
-from .config import SOARMConfig
-from .errors import ConfigurationError, LimitViolation, MotionError
-from .motion import InterpolationMode, TimedJointTrajectory, TrajectoryPoint
-from .safety.limits import minimum_rest_to_rest_duration
+from ..config import SOARMConfig
+from ..errors import ConfigurationError, LimitViolation, MotionError
+from ..motion import InterpolationMode, TimedJointTrajectory, TrajectoryPoint
+from ..safety.limits import minimum_rest_to_rest_duration
 
 if TYPE_CHECKING:
-    from .arm import SOARM
+    from ..arm import SOARM
 
 
 DEMONSTRATION_FORMAT = "soarm.demonstration.v1"

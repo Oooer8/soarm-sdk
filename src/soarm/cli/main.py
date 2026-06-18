@@ -6,20 +6,20 @@ import sys
 import time
 from pathlib import Path
 
-from .arm import SOARM
-from .config import SOARMConfig
-from .demonstration import (
+from ..arm import SOARM
+from ..config import SOARMConfig
+from ..demonstration import (
     DemonstrationRecorder,
     DemonstrationReplayer,
     load_demonstration,
 )
-from .diagnostics import calibration_ready_from_report
-from .errors import SOARMError
-from .hardware import ServoBus
-from .kinematics import forward_kinematics, home_positions, solve_position_ik
+from ..diagnostics import calibration_ready_from_report
+from ..errors import SOARMError
+from ..hardware import ServoBus
+from ..kinematics import forward_kinematics, home_positions, solve_position_ik
 
 
-SOARM_URDF_PATH = Path(__file__).with_name("assets") / "soarm101" / "urdf" / "so_arm101.urdf"
+SOARM_URDF_PATH = Path(__file__).resolve().parents[1] / "assets" / "soarm101" / "urdf" / "so_arm101.urdf"
 
 
 def _add_common(parser: argparse.ArgumentParser) -> None:
@@ -282,7 +282,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.command == "web":
-            from .web import run_web
+            from ..web import run_web
 
             return run_web(config_path=args.config, host=args.host, port=args.port, mock=args.mock)
 
