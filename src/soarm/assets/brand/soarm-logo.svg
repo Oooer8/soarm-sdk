@@ -3,15 +3,21 @@
   <desc id="desc">SOARM SDK wordmark beside a stylized robotic arm mark.</desc>
   <defs>
     <style>
-      :root {
-        --wordmark: #101820;
-        --submark: #5e6875;
+      .wordmark {
+        fill: #101820;
+      }
+
+      .submark {
+        fill: #5e6875;
       }
 
       @media (prefers-color-scheme: dark) {
-        :root {
-          --wordmark: #f4f8fb;
-          --submark: #aab4c2;
+        .wordmark {
+          fill: #f4f8fb;
+        }
+
+        .submark {
+          fill: #aab4c2;
         }
       }
     </style>
@@ -62,9 +68,9 @@
     <circle cx="166" cy="120" r="3.5" fill="#edf6ff" />
   </g>
   <g>
-    <text x="232" y="108" fill="var(--wordmark)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="64" font-weight="850" letter-spacing="0">SOARM</text>
+    <text class="wordmark" x="232" y="108" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="64" font-weight="850" letter-spacing="0">SOARM</text>
     <rect x="418" y="122" width="93" height="35" rx="17.5" fill="url(#sdkBadge)" />
     <text x="442" y="146" fill="#ffffff" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="850" letter-spacing="0">SDK</text>
-    <text x="233" y="150" fill="var(--submark)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" font-weight="700" letter-spacing="0">Python control kit for robotic arms</text>
+    <text class="submark" x="233" y="150" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" font-weight="700" letter-spacing="0">Python control kit for robotic arms</text>
   </g>
 </svg>
