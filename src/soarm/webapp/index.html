@@ -10,22 +10,42 @@
     <main class="app-shell" aria-label="SOARM Web Console">
       <header class="app-header">
         <div class="brand">
-          <img class="brand-mark" src="/assets/brand/soarm-mark.svg" alt="" aria-hidden="true" />
-          <div class="brand-copy">
-            <span>SOARM SDK</span>
-            <strong>Web Console</strong>
-          </div>
+          <span class="brand-logo-frame">
+            <img class="brand-logo" src="/assets/brand/soarm_horizontal_lockup.svg" alt="SOARM SDK" />
+          </span>
+          <strong class="brand-title">Web Console</strong>
         </div>
 
-        <ol class="flow-steps" aria-label="setup steps">
-          <li id="stepStatus" class="active available" role="button" tabindex="0" data-step-target="status"><span>1</span>检测</li>
-          <li id="stepCalibration" class="locked" role="button" tabindex="-1" data-step-target="calibration" aria-disabled="true"><span>2</span>标定</li>
-          <li id="stepControl" class="locked" role="button" tabindex="-1" data-step-target="visualizer" aria-disabled="true"><span>3</span>可视化 / 控制</li>
-        </ol>
+        <div class="header-nav" aria-hidden="true">
+          <span>Setup</span>
+          <span>Calibration</span>
+          <span>Control</span>
+        </div>
 
         <div id="messageBox" class="message-box" role="status">Ready.</div>
       </header>
 
+      <div class="app-main">
+        <aside class="app-sidebar" aria-label="SOARM workflow navigation">
+          <div class="sidebar-heading">
+            <strong>SOARM 工作流</strong>
+            <span>本地机械臂配置与控制</span>
+          </div>
+
+          <ol class="flow-steps" aria-label="setup steps">
+            <li id="stepStatus" class="active available" role="button" tabindex="0" data-step-target="status"><span>1</span>检测</li>
+            <li id="stepCalibration" class="locked" role="button" tabindex="-1" data-step-target="calibration" aria-disabled="true"><span>2</span>标定</li>
+            <li id="stepControl" class="locked" role="button" tabindex="-1" data-step-target="visualizer" aria-disabled="true"><span>3</span>可视化 / 控制</li>
+          </ol>
+
+          <div class="sidebar-card">
+            <span>Console</span>
+            <strong>SO-ARM101</strong>
+            <p>状态检测、零点标定、URDF 可视化与关节控制。</p>
+          </div>
+        </aside>
+
+        <div class="app-content">
       <section class="wizard-page status-page" data-page="status" aria-labelledby="setupTitle">
         <div class="page-title">
           <h1 id="setupTitle">串口与状态检测</h1>
@@ -266,6 +286,8 @@
           </section>
         </aside>
       </section>
+        </div>
+      </div>
     </main>
 
     <script src="/app.js?v=soarm101-frame" defer></script>

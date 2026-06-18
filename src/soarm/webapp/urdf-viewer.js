@@ -19,9 +19,9 @@ export async function createUrdfViewer(container, { urdfUrl, joints = {}, render
   const keyLight = new THREE.DirectionalLight(0xffffff, 2.6);
   keyLight.position.set(1.5, 2.0, 1.6);
   scene.add(keyLight);
-  scene.add(new THREE.HemisphereLight(0xdde8ff, 0x1d252f, 1.4));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xe4e4e7, 1.35));
 
-  const grid = new THREE.GridHelper(0.7, 14, 0x496273, 0x2c3a45);
+  const grid = new THREE.GridHelper(0.7, 14, 0xa1a1aa, 0xe4e4e7);
   grid.position.y = -0.002;
   scene.add(grid);
 

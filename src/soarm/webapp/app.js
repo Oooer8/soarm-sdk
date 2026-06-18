@@ -859,7 +859,7 @@ async function loadUrdfViewer(model, positions) {
   if (!model?.urdf_url || !ui.urdfViewport) return;
 
   try {
-    urdfViewerModulePromise = urdfViewerModulePromise || import("/urdf-viewer.js?v=soarm101-camera-model-joints");
+    urdfViewerModulePromise = urdfViewerModulePromise || import("/urdf-viewer.js?v=soarm101-shadcn-ui");
     const { createUrdfViewer } = await urdfViewerModulePromise;
     urdfViewer = await createUrdfViewer(ui.urdfViewport, {
       urdfUrl: model.urdf_url,
