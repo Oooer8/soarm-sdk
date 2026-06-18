@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/soarm/assets/brand/soarm_horizontal_lockup.svg" alt="SOARM SDK logo" width="560">
+  <img src="docs/assets/brand/soarm_horizontal_lockup.svg" alt="SOARM SDK logo" width="560">
 </p>
 
 # SOARM SDK

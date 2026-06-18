@@ -27,7 +27,6 @@ where = ["src"]
 soarm = [
   "webapp/*",
   "webapp/vendor/*",
-  "assets/brand/*",
   "assets/soarm101/urdf/*",
   "assets/soarm101/urdf/assets/*",
 ]
