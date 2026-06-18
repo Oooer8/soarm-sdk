@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="src/soarm/assets/brand/soarm-logo.svg" alt="SOARM SDK logo" width="460">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="src/soarm/assets/brand/soarm-logo-dark.svg">
+    <img src="src/soarm/assets/brand/soarm-logo.svg" alt="SOARM SDK logo" width="460">
+  </picture>
 </p>
 
 # SOARM SDK
@@ -75,7 +78,7 @@ The detailed documentation is a single static page:
 - [Documentation site](https://oooer8.github.io/soarm-sdk/)
 - [Source: docs/index.html](docs/index.html)
 
-The documentation site is published from `docs/index.html` with GitHub Pages.
+The documentation site is published from `docs/index.html` with GitHub Pages through `.github/workflows/pages.yml`.
 
 ## Repository Layout
 

@@ -6,7 +6,7 @@
   <title>SOARM SDK Documentation</title>
   <style>
     :root {
-      color-scheme: light;
+      color-scheme: light dark;
       --bg: #f6f8fb;
       --panel: #ffffff;
       --ink: #172033;
@@ -15,6 +15,7 @@
       --soft-2: #eef2f7;
       --accent: #0c7a75;
       --accent-dark: #095d59;
+      --accent-ink: #ffffff;
       --code-bg: #101827;
       --code-ink: #e7eefb;
       --warn-bg: #fff7e6;
@@ -23,6 +24,27 @@
       --ok-border: #76c893;
       --radius: 8px;
       --shadow: 0 18px 45px rgba(35, 48, 73, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #101214;
+        --panel: #171a1e;
+        --ink: #eef2f6;
+        --muted: #aab4c0;
+        --soft: #303842;
+        --soft-2: #222830;
+        --accent: #58d7cb;
+        --accent-dark: #7ee5dc;
+        --accent-ink: #071312;
+        --code-bg: #080c12;
+        --code-ink: #edf6ff;
+        --warn-bg: #2f2614;
+        --warn-border: #c58b21;
+        --ok-bg: #10291f;
+        --ok-border: #2dad75;
+        --shadow: 0 18px 45px rgba(0, 0, 0, 0.34);
+      }
     }
 
     * {
@@ -63,7 +85,7 @@
       height: 100vh;
       overflow: auto;
       border-right: 1px solid var(--soft);
-      background: #ffffff;
+      background: var(--panel);
       padding: 28px 22px;
     }
 
@@ -79,9 +101,14 @@
       place-items: center;
       border-radius: 8px;
       background: var(--accent);
-      color: #ffffff;
+      color: var(--accent-ink);
       font-weight: 800;
       letter-spacing: 0;
+    }
+
+    .brand-mark svg {
+      width: 24px;
+      height: 24px;
     }
 
     .brand h1 {
@@ -115,7 +142,7 @@
       display: block;
       border-radius: 6px;
       padding: 7px 9px;
-      color: #2d3a50;
+      color: var(--ink);
       font-size: 14px;
       line-height: 1.35;
     }
@@ -135,7 +162,8 @@
       top: 0;
       z-index: 4;
       border-bottom: 1px solid var(--soft);
-      background: rgba(255, 255, 255, 0.94);
+      background: var(--panel);
+      background: color-mix(in srgb, var(--panel) 94%, transparent);
       padding: 12px 18px;
       backdrop-filter: blur(12px);
     }
@@ -183,7 +211,7 @@
       align-items: center;
       border: 1px solid var(--soft);
       border-radius: 6px;
-      background: #ffffff;
+      background: var(--panel);
       padding: 8px 12px;
       color: var(--ink);
       font-size: 14px;
@@ -194,7 +222,7 @@
     .quick-links a.primary {
       border-color: var(--accent);
       background: var(--accent);
-      color: #ffffff;
+      color: var(--accent-ink);
     }
 
     section {
@@ -236,6 +264,7 @@
     }
 
     .panel {
+      min-width: 0;
       border: 1px solid var(--soft);
       border-radius: var(--radius);
       background: var(--panel);
@@ -250,7 +279,7 @@
     .callout {
       border: 1px solid var(--soft);
       border-radius: var(--radius);
-      background: #ffffff;
+      background: var(--panel);
       padding: 16px 18px;
       margin: 18px 0;
     }
@@ -270,7 +299,7 @@
       margin: 16px 0 22px;
       border: 1px solid var(--soft);
       border-radius: var(--radius);
-      background: #ffffff;
+      background: var(--panel);
     }
 
     table {
@@ -288,8 +317,8 @@
     }
 
     th {
-      background: #f9fbfd;
-      color: #2b374c;
+      background: var(--soft-2);
+      color: var(--ink);
       font-weight: 750;
     }
 
@@ -299,9 +328,9 @@
 
     code {
       border-radius: 5px;
-      background: #e9eef6;
+      background: var(--soft-2);
       padding: 2px 5px;
-      color: #243149;
+      color: var(--ink);
       font-size: 0.92em;
     }
 
@@ -334,9 +363,10 @@
       grid-template-columns: 180px minmax(0, 1fr);
       gap: 12px;
       align-items: stretch;
+      min-width: 0;
       border: 1px solid var(--soft);
       border-radius: var(--radius);
-      background: #ffffff;
+      background: var(--panel);
       padding: 12px;
     }
 
@@ -412,6 +442,24 @@
         width: 100%;
         justify-content: center;
       }
+
+      table {
+        min-width: 0;
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 9px 10px;
+      }
+
+      pre,
+      pre code,
+      code,
+      td code {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
     }
   </style>
 </head>
@@ -419,7 +467,14 @@
   <div class="shell">
     <aside class="sidebar" aria-label="Documentation navigation">
       <div class="brand">
-        <div class="brand-mark">SO</div>
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" focusable="false">
+            <path d="M7 22h8l4-10 6 4 3-8" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="7" cy="22" r="2.4" fill="currentColor"/>
+            <circle cx="19" cy="12" r="2.4" fill="currentColor"/>
+            <circle cx="28" cy="8" r="2.4" fill="currentColor"/>
+          </svg>
+        </div>
         <h1>SOARM SDK</h1>
         <p>Python SDK, CLI, and local web console for a Feetech STS3215 based SOARM.</p>
       </div>
