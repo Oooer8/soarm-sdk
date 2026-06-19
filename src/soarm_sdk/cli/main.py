@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 from ..arm import SOARM
-from ..config import SOARMConfig
+from ..config import SOARMConfig, ensure_user_config, resolve_config_path
 from ..demonstration import (
     DemonstrationRecorder,
     DemonstrationReplayer,
@@ -23,7 +23,7 @@ SOARM_URDF_PATH = Path(__file__).resolve().parents[1] / "assets" / "soarm101" / 
 
 
 def _add_common(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--config", default="configs/soarm-sdk.yaml", help="Path to SOARM YAML config")
+    parser.add_argument("--config", default=None, help="Path to SOARM YAML config")
     parser.add_argument("--mock", action="store_true", help="Use the in-memory mock bus")
 
 
@@ -90,13 +90,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog=Path(sys.argv[0]).name)
     sub = parser.add_subparsers(dest="command", required=True)
 
+    init_config = sub.add_parser(
+        "init-config",
+        help="Copy the packaged default config to an editable user config path",
+    )
+    init_config.add_argument("output", nargs="?", default=None, help="Output config path")
+    init_config.add_argument("--overwrite", action="store_true", help="Overwrite existing config files")
+
     ports = sub.add_parser("ports", help="List candidate servo bus ports and update config")
-    ports.add_argument("--config", default="configs/soarm-sdk.yaml", help="Path to SOARM YAML config to update")
+    ports.add_argument("--config", default=None, help="Path to SOARM YAML config to update")
     ports.add_argument("--port", default=None, help="Port to write when more than one candidate is found")
     ports.add_argument("--no-update", action="store_true", help="List ports without updating config")
 
     web = sub.add_parser("web", help="Serve the browser-based setup and status checker")
-    web.add_argument("--config", default="configs/soarm-sdk.yaml", help="Path to SOARM YAML config")
+    web.add_argument("--config", default=None, help="Path to SOARM YAML config")
     web.add_argument("--host", default="127.0.0.1", help="Host interface to bind")
     web.add_argument("--port", type=int, default=8765, help="HTTP port to bind")
     web.add_argument("--mock", action="store_true", help="Default status checks to the in-memory mock bus")
@@ -124,11 +131,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     fk = sub.add_parser("fk", help="Compute SOARM forward kinematics from JOINT=RAD targets")
-    fk.add_argument("--config", default="configs/soarm-sdk.yaml", help="Path to SOARM YAML config")
+    fk.add_argument("--config", default=None, help="Path to SOARM YAML config")
     fk.add_argument("targets", nargs="*")
 
     ik = sub.add_parser("ik", help="Compute an approximate SOARM IK solution for a target point")
-    ik.add_argument("--config", default="configs/soarm-sdk.yaml", help="Path to SOARM YAML config")
+    ik.add_argument("--config", default=None, help="Path to SOARM YAML config")
     ik.add_argument("x", type=float)
     ik.add_argument("y", type=float)
     ik.add_argument("z", type=float)
@@ -245,6 +252,11 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
 
     try:
+        if args.command == "init-config":
+            output = ensure_user_config(args.output, overwrite=args.overwrite)
+            print(f"Config ready: {output}")
+            return 0
+
         if args.command == "ports":
             found_ports = ServoBus.list_ports()
             if found_ports:
@@ -275,7 +287,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 return 1
 
-            config_path = Path(args.config)
+            config_path = resolve_config_path(args.config, for_write=True)
             config = SOARMConfig.from_file(config_path).replace_arm_port(selected_port)
             config.save(config_path)
             print(f"Updated {config_path}: arm.port={selected_port}")
@@ -294,14 +306,14 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.command == "fk":
-            config = SOARMConfig.from_file(Path(args.config))
+            config = SOARMConfig.from_file(resolve_config_path(args.config))
             positions = home_positions(config)
             positions.update(_parse_targets(args.targets))
             print(json.dumps(forward_kinematics(config, positions), indent=2))
             return 0
 
         if args.command == "ik":
-            config = SOARMConfig.from_file(Path(args.config))
+            config = SOARMConfig.from_file(resolve_config_path(args.config))
             result = solve_position_ik(
                 config,
                 {"x": args.x, "y": args.y, "z": args.z},
@@ -310,7 +322,9 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(result, indent=2))
             return 0
 
-        arm = SOARM.from_config(Path(args.config), mock=args.mock)
+        config_for_write = args.command in {"calibrate", "capture-pose"} and args.output is None
+        config_path = resolve_config_path(args.config, for_write=config_for_write)
+        arm = SOARM.from_config(config_path, mock=args.mock)
         if args.command in {"replay-demo", "replay"} and args.dry_run:
             demo = load_demonstration(args.input)
             replayer = DemonstrationReplayer(arm)

@@ -15,7 +15,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 from .arm import SOARM
 from .calibration import AllJointsRangeRecorder, capture_zero_ticks
-from .config import SOARMConfig
+from .config import SOARMConfig, default_user_config_path, resolve_config_path
 from .diagnostics import calibration_ready_from_report
 from .errors import SOARMError
 from .hardware import ServoBus
@@ -48,7 +48,7 @@ def _strip_ansi(text: str) -> str:
 
 
 class SOARMWebHandler(BaseHTTPRequestHandler):
-    config_path = Path("configs/soarm-sdk.yaml")
+    config_path = default_user_config_path()
     mock = False
     session_state: dict[str, Any] = {
         "status_passed": False,
@@ -1025,12 +1025,12 @@ class SOARMWebHandler(BaseHTTPRequestHandler):
 
 def run_web(
     *,
-    config_path: str | Path = "configs/soarm-sdk.yaml",
+    config_path: str | Path | None = None,
     host: str = "127.0.0.1",
     port: int = 8765,
     mock: bool = False,
 ) -> int:
-    path = Path(config_path)
+    path = resolve_config_path(config_path, for_write=True)
     handler = type(
         "ConfiguredSOARMWebHandler",
         (SOARMWebHandler,),

@@ -32,32 +32,37 @@ pip install -e .
 This workspace uses the `soarm-sdk` conda environment for local validation:
 
 ```bash
-conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock
+conda run -n soarm-sdk soarm-sdk status --mock
 ```
 
 ## Quick Start
 
 ```bash
-soarm-sdk ports --config configs/soarm-sdk.yaml
-soarm-sdk status --config configs/soarm-sdk.yaml
-soarm-sdk calibrate --config configs/soarm-sdk.yaml --output configs/soarm-sdk.yaml
-soarm-sdk home --config configs/soarm-sdk.yaml --duration 2.0
-soarm-sdk web --config configs/soarm-sdk.yaml
+soarm-sdk init-config
+soarm-sdk ports
+soarm-sdk status
+soarm-sdk calibrate
+soarm-sdk home --duration 2.0
+soarm-sdk web
 ```
 
 For no-hardware checks, add `--mock` where supported:
 
 ```bash
-soarm-sdk status --config configs/soarm-sdk.yaml --mock
-soarm-sdk web --config configs/soarm-sdk.yaml --mock
+soarm-sdk status --mock
+soarm-sdk web --mock
 ```
+
+`src/soarm_sdk/configs/` is the packaged canonical config template. The top-level
+`configs/` directory is ignored by git and is used for generated, user-editable
+working copies created by `soarm-sdk init-config`, `soarm-sdk ports`, or the Web UI.
 
 ## Python API
 
 ```python
-from soarm_sdk import SOARM
+from soarm_sdk import SOARM, ensure_user_config
 
-with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
+with SOARM.from_config(ensure_user_config()) as arm:
     arm.enable()
     arm.move_home(duration=1.5)
     arm.move_joints(
@@ -75,9 +80,9 @@ For online teleoperation, use the SDK-owned streaming controller. It accepts
 low-frequency target updates and owns the fixed-rate output loop:
 
 ```python
-from soarm_sdk import SOARM
+from soarm_sdk import SOARM, ensure_user_config
 
-with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
+with SOARM.from_config(ensure_user_config()) as arm:
     stream = arm.start_joint_stream(output_hz=200, target_timeout_s=0.15)
     try:
         stream.update_target(
@@ -104,7 +109,7 @@ GitHub Actions uploads `docs/` as a Pages artifact and deploys it to GitHub Page
 ## Repository Layout
 
 ```text
-configs/       Example SOARM, runtime, and motor-profile configs
+configs/       Generated user config working copies (gitignored except .gitkeep)
 docs/          Single-page documentation site
 examples/      Small Python API examples
 scripts/       Bench and measurement utilities
@@ -112,7 +117,7 @@ src/soarm_sdk/     Python package
   application/ Web/CLI payload and workflow helpers
   calibration/ Calibration capture and sweep logic
   cli/         Command-line entry point and command dispatch
-  config/      YAML schema, split-config loading, and persistence
+  config/      Packaged defaults, YAML schema, split-config loading, and persistence
   demonstration/
                Demonstration data, validation, recording, and replay
   hardware/    Feetech bus, registers, units, and motor profile writes
@@ -132,15 +137,15 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the package layering and import rules
 - `SOARM.stream_joints()` is a one-shot setpoint write kept for simple streaming callers. `SOARM.start_joint_stream()` is the long-lived online controller for teleoperation; it owns the output loop, latest-target slot, velocity/acceleration limiting, and timeout hold behavior.
 - `SOARM.follow_joint_trajectory()` is for replaying already-timestamped trajectories and demonstrations.
 - `soarm_sdk.application` holds shared Web/CLI payload and workflow helpers so UI code does not duplicate config, FK/IK, calibration, or safety rules.
-- `SOARMConfig.save()` preserves split configs when saving back to `configs/soarm-sdk.yaml`: runtime settings go to `configs/runtime.yaml`, and motor profile settings go to `configs/motors/feetech_sts3215.yaml`.
+- `src/soarm_sdk/configs/` is the only tracked canonical config set. `ensure_user_config()` copies it to a user-editable split config under `configs/`, and `SOARMConfig.save()` preserves that split layout when saving back to the generated main path.
 - Focused unit tests cover the online streaming controller. Mock CLI paths and compile checks remain the lightweight baseline for broader local regression validation.
 
 ```bash
 PYTHONPYCACHEPREFIX=/private/tmp/soarm-sdk-pycache conda run -n soarm-sdk python -m compileall src tests
 conda run -n soarm-sdk python -m unittest discover -s tests -v
-conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock
-conda run -n soarm-sdk soarm-sdk fk --config configs/soarm-sdk.yaml shoulder_lift=-0.3 elbow_flex=0.5
-conda run -n soarm-sdk soarm-sdk ik --config configs/soarm-sdk.yaml 0.42 0.0 0.20
+conda run -n soarm-sdk soarm-sdk status --mock
+conda run -n soarm-sdk soarm-sdk fk shoulder_lift=-0.3 elbow_flex=0.5
+conda run -n soarm-sdk soarm-sdk ik 0.42 0.0 0.20
 ```
 
 ## License

@@ -17,7 +17,7 @@ def _wait_for(predicate, *, timeout: float = 1.0) -> None:
 
 class JointStreamingControllerTest(unittest.TestCase):
     def test_moves_toward_latest_target_with_mock_bus(self) -> None:
-        arm = SOARM.mock("configs/soarm-sdk.yaml")
+        arm = SOARM.mock()
         arm.connect()
         stream = arm.start_joint_stream(output_hz=100, target_timeout_s=0.5)
         try:
@@ -33,7 +33,7 @@ class JointStreamingControllerTest(unittest.TestCase):
             arm.disconnect()
 
     def test_holds_when_target_goes_stale(self) -> None:
-        arm = SOARM.mock("configs/soarm-sdk.yaml")
+        arm = SOARM.mock()
         arm.connect()
         stream = arm.start_joint_stream(output_hz=80, target_timeout_s=0.05)
         try:
@@ -54,7 +54,7 @@ class JointStreamingControllerTest(unittest.TestCase):
             arm.disconnect()
 
     def test_rejects_unknown_joints(self) -> None:
-        arm = SOARM.mock("configs/soarm-sdk.yaml")
+        arm = SOARM.mock()
         arm.connect()
         stream = arm.start_joint_stream(output_hz=50)
         try:

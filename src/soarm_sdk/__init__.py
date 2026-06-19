@@ -1,5 +1,13 @@
 from .arm import SOARM
-from .config import ArmSettings, CalibrationMetadata, SOARMConfig, default_config_path
+from .config import (
+    ArmSettings,
+    CalibrationMetadata,
+    SOARMConfig,
+    default_config_path,
+    default_user_config_path,
+    ensure_user_config,
+    resolve_config_path,
+)
 from .demonstration import (
     Demonstration,
     DemonstrationRecorder,
@@ -62,11 +70,14 @@ __all__ = [
     "TrajectoryPoint",
     "UnsupportedFeature",
     "default_config_path",
+    "default_user_config_path",
+    "ensure_user_config",
     "forward_kinematics",
     "home_positions",
     "load_demonstration",
     "record_demonstration",
     "replay_demonstration",
+    "resolve_config_path",
     "save_demonstration",
     "solve_position_ik",
     "validate_demonstration_for_config",

@@ -3,10 +3,9 @@ from __future__ import annotations
 import argparse
 import statistics
 import time
-from pathlib import Path
 from typing import Any, Mapping
 
-from soarm_sdk.config import SOARMConfig
+from soarm_sdk.config import SOARMConfig, resolve_config_path
 from soarm_sdk.hardware import ServoBus
 from soarm_sdk.motion import MotionController
 from soarm_sdk.safety import SafetyGuard
@@ -71,7 +70,7 @@ class RecordingBus:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Measure SOARM bus/control frequencies.")
-    parser.add_argument("--config", default="configs/soarm-sdk.yaml")
+    parser.add_argument("--config", default=None)
     parser.add_argument("--mock", action="store_true")
     parser.add_argument("--iterations", type=int, default=100)
     parser.add_argument("--warmup", type=int, default=10)
@@ -113,9 +112,10 @@ def main() -> int:
     if args.controller_duration <= 0:
         raise SystemExit("--controller-duration must be positive")
 
-    config = SOARMConfig.from_file(Path(args.config))
+    config_path = resolve_config_path(args.config)
+    config = SOARMConfig.from_file(config_path)
     bus = make_bus(config, mock=args.mock)
-    print(f"config: {args.config}")
+    print(f"config: {config_path}")
     print(f"mode: {'mock' if args.mock else 'hardware'}")
     print(f"servo_ids: {config.servo_ids}")
     print(f"baudrate: {config.arm.baudrate}")

@@ -10,7 +10,7 @@ from .calibration import (
     capture_current_pose,
     capture_zero_ticks,
 )
-from .config import SOARMConfig
+from .config import SOARMConfig, default_config_path
 from .diagnostics import run_basic_checks
 from .errors import CalibrationError, ConfigurationError, UnsupportedFeature
 from .hardware import ServoBus
@@ -64,7 +64,9 @@ class SOARM:
         return arm
 
     @classmethod
-    def mock(cls, config: SOARMConfig | str | Path = "configs/soarm-sdk.yaml") -> "SOARM":
+    def mock(cls, config: SOARMConfig | str | Path | None = None) -> "SOARM":
+        if config is None:
+            config = default_config_path()
         if not isinstance(config, SOARMConfig):
             config = SOARMConfig.from_file(config)
         return cls(config, mock=True)

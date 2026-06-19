@@ -1140,7 +1140,7 @@
           <pre><code>pip install -e .</code></pre>
           <p>This workspace uses the <code>soarm-sdk</code> conda environment for local validation.</p>
           <pre><code>conda run -n soarm-sdk python -m pip install -e .
-conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock</code></pre>
+conda run -n soarm-sdk soarm-sdk status --mock</code></pre>
           <div class="callout ok">
             Mock mode is useful for CLI, Web, and documentation checks. It does not replace real checks for wiring, servo IDs, voltage, torque behavior, or mechanical range.
           </div>
@@ -1175,21 +1175,21 @@ conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock</
 
         <section id="configuration">
           <h2>Configuration</h2>
-          <p><code>configs/soarm-sdk.yaml</code> is the shared entry point for CLI, Web, and Python API usage.</p>
+          <p><code>src/soarm_sdk/configs/</code> is the packaged canonical config template. The top-level <code>configs/</code> directory is a gitignored user working copy created by <code>soarm-sdk init-config</code>, write-capable CLI commands, or the Web UI.</p>
           <pre><code>includes:
   runtime: runtime.yaml
   motor_profile: motors/feetech_sts3215.yaml</code></pre>
           <div class="grid">
             <div class="panel">
-              <h3><code>configs/soarm-sdk.yaml</code></h3>
+              <h3><code>soarm-sdk.yaml</code></h3>
               <p>Arm name, serial port, baud rate, joint IDs, calibration, soft limits, and named poses.</p>
             </div>
             <div class="panel">
-              <h3><code>configs/runtime.yaml</code></h3>
+              <h3><code>runtime.yaml</code></h3>
               <p>Control frequency, feedback frequency, Web sync/render rates, voltage threshold, and max step.</p>
             </div>
             <div class="panel">
-              <h3><code>configs/motors/feetech_sts3215.yaml</code></h3>
+              <h3><code>motors/feetech_sts3215.yaml</code></h3>
               <p>Feetech register policy: PID, return delay, acceleration, mode, and gripper protection.</p>
             </div>
             <div class="panel">
@@ -1203,8 +1203,9 @@ conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock</
           <h2>First Bring-Up</h2>
           <ol>
             <li>Inspect wiring, power, linkage travel, and gripper clearance with power off.</li>
-            <li>Assign servo IDs to match <code>configs/soarm-sdk.yaml</code>.</li>
+            <li>Assign servo IDs to match the packaged or generated <code>soarm-sdk.yaml</code>.</li>
             <li>Install the SDK and run the mock status command.</li>
+            <li>Create a user config copy.</li>
             <li>Scan and save the serial port.</li>
             <li>Run real <code>status</code> and inspect communication, voltage, raw position, and soft-limit results.</li>
             <li>If calibration is missing or stale, run calibration.</li>
@@ -1213,43 +1214,47 @@ conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock</
             <li>Try a small low-speed move or named pose.</li>
             <li>Open the Web GUI for visual feedback and slider control.</li>
           </ol>
-          <pre><code>conda run -n soarm-sdk soarm-sdk ports --config configs/soarm-sdk.yaml
-conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml
-conda run -n soarm-sdk soarm-sdk calibrate --config configs/soarm-sdk.yaml --output configs/soarm-sdk.yaml
-conda run -n soarm-sdk soarm-sdk configure-motors --config configs/soarm-sdk.yaml --check-only
-conda run -n soarm-sdk soarm-sdk home --config configs/soarm-sdk.yaml --duration 2.0</code></pre>
+          <pre><code>conda run -n soarm-sdk soarm-sdk init-config
+conda run -n soarm-sdk soarm-sdk ports
+conda run -n soarm-sdk soarm-sdk status
+conda run -n soarm-sdk soarm-sdk calibrate
+conda run -n soarm-sdk soarm-sdk configure-motors --check-only
+conda run -n soarm-sdk soarm-sdk home --duration 2.0</code></pre>
         </section>
 
         <section id="cli">
           <h2>CLI Reference</h2>
+          <h3>Config copy</h3>
+          <pre><code>soarm-sdk init-config
+soarm-sdk init-config my_robot/soarm-sdk.yaml --overwrite</code></pre>
           <h3>Port discovery</h3>
-          <pre><code>soarm-sdk ports --config configs/soarm-sdk.yaml
-soarm-sdk ports --config configs/soarm-sdk.yaml --port /dev/cu.usbmodem5A7C1190351
-soarm-sdk ports --config configs/soarm-sdk.yaml --no-update</code></pre>
+          <pre><code>soarm-sdk ports
+soarm-sdk ports --port /dev/cu.usbmodem5A7C1190351
+soarm-sdk ports --no-update</code></pre>
           <h3>Health and calibration</h3>
-          <pre><code>soarm-sdk status --config configs/soarm-sdk.yaml
-soarm-sdk calibrate --config configs/soarm-sdk.yaml --output configs/soarm-sdk.yaml</code></pre>
+          <pre><code>soarm-sdk status
+soarm-sdk calibrate</code></pre>
           <h3>Joint reads and motion</h3>
-          <pre><code>soarm-sdk read --config configs/soarm-sdk.yaml --unit rad
-soarm-sdk home --config configs/soarm-sdk.yaml --duration 1.5
-soarm-sdk move --config configs/soarm-sdk.yaml shoulder_pan=0.0 elbow_flex=0.5 --duration 1.0
-soarm-sdk pose --config configs/soarm-sdk.yaml ready --duration 1.0</code></pre>
+          <pre><code>soarm-sdk read --unit rad
+soarm-sdk home --duration 1.5
+soarm-sdk move shoulder_pan=0.0 elbow_flex=0.5 --duration 1.0
+soarm-sdk pose ready --duration 1.0</code></pre>
           <h3>Maintenance and debugging</h3>
-          <pre><code>soarm-sdk configure-motors --config configs/soarm-sdk.yaml --check-only
-soarm-sdk configure-motors --config configs/soarm-sdk.yaml
-soarm-sdk configure-motors --config configs/soarm-sdk.yaml --force
-soarm-sdk probe-joint shoulder_pan --config configs/soarm-sdk.yaml --delta -0.1 --duration 1
-soarm-sdk capture-pose --config configs/soarm-sdk.yaml ready --output configs/soarm-sdk.yaml
-soarm-sdk disable --config configs/soarm-sdk.yaml</code></pre>
+          <pre><code>soarm-sdk configure-motors --check-only
+soarm-sdk configure-motors
+soarm-sdk configure-motors --force
+soarm-sdk probe-joint shoulder_pan --delta -0.1 --duration 1
+soarm-sdk capture-pose ready
+soarm-sdk disable</code></pre>
           <h3>Kinematics</h3>
-          <pre><code>soarm-sdk fk --config configs/soarm-sdk.yaml shoulder_lift=-0.3 elbow_flex=0.5
-soarm-sdk ik --config configs/soarm-sdk.yaml 0.42 0.0 0.20</code></pre>
+          <pre><code>soarm-sdk fk shoulder_lift=-0.3 elbow_flex=0.5
+soarm-sdk ik 0.42 0.0 0.20</code></pre>
         </section>
 
         <section id="web-gui">
           <h2>Web GUI</h2>
           <p>Start the local browser console:</p>
-          <pre><code>conda run -n soarm-sdk soarm-sdk web --config configs/soarm-sdk.yaml --mock</code></pre>
+          <pre><code>conda run -n soarm-sdk soarm-sdk web --mock</code></pre>
           <p>Without <code>--mock</code>, the Web server talks to the configured serial bus. The default URL is <code>http://127.0.0.1:8765/</code>.</p>
           <div class="table-wrap">
             <table>
@@ -1271,12 +1276,12 @@ soarm-sdk ik --config configs/soarm-sdk.yaml 0.42 0.0 0.20</code></pre>
         <section id="teaching">
           <h2>Teaching Record And Replay</h2>
           <p>Record joint-space demonstrations as JSON:</p>
-          <pre><code>soarm-sdk record-demo demos/pick_place.json --config configs/soarm-sdk.yaml --duration 10 --hz 20
-soarm-sdk record-demo demos/elbow_only.json --config configs/soarm-sdk.yaml --joints shoulder_pan elbow_flex</code></pre>
+          <pre><code>soarm-sdk record-demo demos/pick_place.json --duration 10 --hz 20
+soarm-sdk record-demo demos/elbow_only.json --joints shoulder_pan elbow_flex</code></pre>
           <p>Validate and replay safely:</p>
-          <pre><code>soarm-sdk replay-demo demos/pick_place.json --config configs/soarm-sdk.yaml --dry-run
-soarm-sdk replay-demo demos/pick_place.json --config configs/soarm-sdk.yaml --speed 0.5
-soarm-sdk replay-demo demos/pick_place.json --config configs/soarm-sdk.yaml --output-hz 200 --interpolation pchip</code></pre>
+          <pre><code>soarm-sdk replay-demo demos/pick_place.json --dry-run
+soarm-sdk replay-demo demos/pick_place.json --speed 0.5
+soarm-sdk replay-demo demos/pick_place.json --output-hz 200 --interpolation pchip</code></pre>
           <p>
             The demonstration format is <code>soarm_sdk.demonstration.v1</code>. It stores <code>created_at</code>, <code>metadata</code>, selected joints,
             and time-stamped radian samples. Replay validates the file, moves through a safety-checked lead-in, interpolates sparse samples to setpoints,
@@ -1286,9 +1291,9 @@ soarm-sdk replay-demo demos/pick_place.json --config configs/soarm-sdk.yaml --ou
 
         <section id="python-api">
           <h2>Python API</h2>
-          <pre><code>from soarm_sdk import SOARM
+          <pre><code>from soarm_sdk import SOARM, ensure_user_config
 
-with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
+with SOARM.from_config(ensure_user_config()) as arm:
     arm.enable()
     arm.move_home(duration=1.5)
     arm.move_joints(
@@ -1301,9 +1306,9 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
     )
     print(arm.get_joint_positions())</code></pre>
           <h3>Online streaming</h3>
-          <pre><code>from soarm_sdk import SOARM
+          <pre><code>from soarm_sdk import SOARM, ensure_user_config
 
-with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
+with SOARM.from_config(ensure_user_config()) as arm:
     stream = arm.start_joint_stream(output_hz=200, target_timeout_s=0.15)
     try:
         stream.update_target({
@@ -1320,12 +1325,14 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
             fixed-rate output, velocity/acceleration limiting, and timeout hold behavior.
           </p>
           <h3>Demonstration helpers</h3>
-          <pre><code>from soarm_sdk import SOARM, record_demonstration, replay_demonstration
+          <pre><code>from soarm_sdk import SOARM, ensure_user_config, record_demonstration, replay_demonstration
 
-with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
+config_path = ensure_user_config()
+
+with SOARM.from_config(config_path) as arm:
     record_demonstration(arm, "demos/pick_place.json", duration=10, sample_hz=20)
 
-with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
+with SOARM.from_config(config_path) as arm:
     replay_demonstration(arm, "demos/pick_place.json", speed=1.0)</code></pre>
         </section>
 
@@ -1369,7 +1376,7 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
                 <tr>
                   <td>Status fails on communication</td>
                   <td>Wrong serial port, baud rate, cabling, power, or servo ID.</td>
-                  <td>Run <code>soarm-sdk ports --config configs/soarm-sdk.yaml --no-update</code>, then verify wiring and IDs.</td>
+                  <td>Run <code>soarm-sdk ports --no-update</code>, then verify wiring and IDs.</td>
                 </tr>
                 <tr>
                   <td>Status fails only on soft limits</td>
@@ -1422,7 +1429,7 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
             <li><code>SafetyGuard</code> and <code>safety.limits</code> centralize soft-limit, step, voltage, velocity, acceleration, and minimum-duration checks.</li>
             <li><code>SOARM</code> passes one reentrant I/O lock into <code>MotionController</code>, so online streaming writes and foreground state reads serialize on the same bus.</li>
             <li><code>JointStreamingController</code> writes only when its output reference advances; reached or stale targets hold without redundant bus writes.</li>
-            <li><code>SOARMConfig.save()</code> preserves split config files when saving back to <code>configs/soarm-sdk.yaml</code>.</li>
+            <li><code>SOARMConfig.save()</code> preserves split config files when saving back to a generated user config.</li>
             <li><code>soarm_sdk.motor_profile</code> and <code>soarm_sdk.workflows</code> are compatibility re-export modules; new internal code should use <code>hardware.motor_profile</code> and <code>application.workflows</code>.</li>
           </ul>
         </section>
@@ -1432,11 +1439,11 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
           <p>Use mock checks before touching hardware:</p>
           <pre><code>PYTHONPYCACHEPREFIX=/private/tmp/soarm-sdk-pycache conda run -n soarm-sdk python -m compileall src tests
 conda run -n soarm-sdk python -m unittest discover -s tests -v
-conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock
-conda run -n soarm-sdk soarm-sdk fk --config configs/soarm-sdk.yaml shoulder_lift=-0.3 elbow_flex=0.5
-conda run -n soarm-sdk soarm-sdk ik --config configs/soarm-sdk.yaml 0.42 0.0 0.20
-conda run -n soarm-sdk soarm-sdk record-demo /tmp/soarm-demo.json --config configs/soarm-sdk.yaml --mock --duration 1
-conda run -n soarm-sdk soarm-sdk replay-demo /tmp/soarm-demo.json --config configs/soarm-sdk.yaml --dry-run</code></pre>
+conda run -n soarm-sdk soarm-sdk status --mock
+conda run -n soarm-sdk soarm-sdk fk shoulder_lift=-0.3 elbow_flex=0.5
+conda run -n soarm-sdk soarm-sdk ik 0.42 0.0 0.20
+conda run -n soarm-sdk soarm-sdk record-demo /tmp/soarm-demo.json --mock --duration 1
+conda run -n soarm-sdk soarm-sdk replay-demo /tmp/soarm-demo.json --dry-run</code></pre>
           <p>Focused unit tests cover online streaming behavior. Compile checks and mock CLI paths remain the lightweight regression baseline for broader SDK flows.</p>
           <p>When changing code, keep these boundaries intact:</p>
           <ul>

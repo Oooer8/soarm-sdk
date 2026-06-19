@@ -3,9 +3,8 @@ from __future__ import annotations
 import argparse
 import statistics
 import time
-from pathlib import Path
 
-from soarm_sdk.config import SOARMConfig
+from soarm_sdk.config import SOARMConfig, resolve_config_path
 from soarm_sdk.hardware import ServoBus
 from soarm_sdk.testing import MockBus
 
@@ -40,7 +39,7 @@ def parse_args() -> argparse.Namespace:
             "writing the current servo ticks back to the same servos."
         )
     )
-    parser.add_argument("--config", default="configs/soarm-sdk.yaml")
+    parser.add_argument("--config", default=None)
     parser.add_argument("--mock", action="store_true", help="Use the in-memory mock bus")
     parser.add_argument("--iterations", type=int, default=50)
     parser.add_argument("--warmup", type=int, default=5)
@@ -62,7 +61,8 @@ def main() -> int:
     if args.sleep < 0:
         raise SystemExit("--sleep must be non-negative")
 
-    config = SOARMConfig.from_file(Path(args.config))
+    config_path = resolve_config_path(args.config)
+    config = SOARMConfig.from_file(config_path)
     bus = MockBus(config) if args.mock else ServoBus(
         servo_ids=config.servo_ids,
         port=config.arm.port,
@@ -70,7 +70,7 @@ def main() -> int:
         auto_disable=config.arm.auto_disable,
     )
 
-    print(f"config: {args.config}")
+    print(f"config: {config_path}")
     print(f"mode: {'mock' if args.mock else 'hardware'}")
     print(f"servo_ids: {config.servo_ids}")
     print(f"baudrate: {config.arm.baudrate}")

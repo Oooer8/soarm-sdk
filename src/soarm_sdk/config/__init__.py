@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from .schema import (
     ArmSettings,
     CalibrationMetadata,
@@ -10,12 +8,12 @@ from .schema import (
     PIDSettings,
     SOARMConfig,
 )
-
-
-def default_config_path() -> Path:
-    """Return the packaged default SOARM SDK arm config."""
-
-    return Path(__file__).resolve().parents[1] / "configs" / "soarm-sdk.yaml"
+from .runtime import (
+    default_config_path,
+    default_user_config_path,
+    ensure_user_config,
+    resolve_config_path,
+)
 
 
 __all__ = [
@@ -28,4 +26,7 @@ __all__ = [
     "PIDSettings",
     "SOARMConfig",
     "default_config_path",
+    "default_user_config_path",
+    "ensure_user_config",
+    "resolve_config_path",
 ]

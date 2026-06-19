@@ -7,7 +7,7 @@ scripts, tests, and future application surfaces.
 ## Current Capabilities
 
 - Feetech STS/SMS servo bus access through `scservo_sdk`
-- YAML configuration with split runtime and motor-profile includes
+- Packaged canonical YAML config plus generated split user config copies
 - Read-only diagnostics for communication, position, soft limits, and voltage
 - Interactive calibration with zero capture and one-pass all-joint sweep
 - Joint-space safety checks for limits, step size, velocity, acceleration, and voltage
@@ -22,7 +22,8 @@ scripts, tests, and future application surfaces.
 1. `soarm_sdk.constants`, `soarm_sdk.errors`, `soarm_sdk.model`
    define SDK-wide constants, exceptions, and pure dataclasses.
 2. `soarm_sdk.config`
-   loads, validates, merges, and writes YAML config, including split files.
+   owns packaged defaults, user-copy generation, and YAML load/merge/save logic,
+   including split files.
 3. `soarm_sdk.hardware`
    owns Feetech register definitions, unit conversion, serial bus I/O, torque,
    operating mode, PID, and motor-profile register writes.
@@ -126,12 +127,20 @@ HTTP handler -> application.workflow payload helpers
 
 ## Configuration Model
 
-`configs/soarm-sdk.yaml` is the main config. It may include:
+`src/soarm_sdk/configs/` is the single tracked canonical config template and is
+included in the Python package. It contains the main config:
 
-- `configs/runtime.yaml` for control frequency, feedback frequency, Web update
+- `soarm-sdk.yaml` for identity, bus settings, calibration, joints, and poses.
+- `runtime.yaml` for control frequency, feedback frequency, Web update
   rates, voltage threshold, max step, and auto-disable behavior.
-- `configs/motors/feetech_sts3215.yaml` for motor-profile policy and register
+- `motors/feetech_sts3215.yaml` for motor-profile policy and register
   values.
+
+The repository-root `configs/` directory is not a second source of truth. It is
+gitignored and exists as the default location for generated user working copies.
+`soarm-sdk init-config`, write-capable CLI commands, and the Web UI can copy the
+packaged split config there before saving port, calibration, identity, runtime,
+or motor-profile edits.
 
 When a split config is loaded and saved back to the same main path,
 `SOARMConfig.save()` writes runtime values back to the runtime file and motor
@@ -170,13 +179,13 @@ New internal code should import the layered module directly.
 The installed command is:
 
 ```bash
-soarm-sdk status --config configs/soarm-sdk.yaml --mock
+soarm-sdk status --mock
 ```
 
 The module form is:
 
 ```bash
-python -m soarm_sdk.cli status --config configs/soarm-sdk.yaml --mock
+python -m soarm_sdk.cli status --mock
 ```
 
 ## Development Checks
@@ -186,9 +195,9 @@ Use the project conda environment for local validation:
 ```bash
 PYTHONPYCACHEPREFIX=/private/tmp/soarm-sdk-pycache conda run -n soarm-sdk python -m compileall src tests
 conda run -n soarm-sdk python -m unittest discover -s tests -v
-conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock
-conda run -n soarm-sdk soarm-sdk fk --config configs/soarm-sdk.yaml shoulder_lift=-0.3 elbow_flex=0.5
-conda run -n soarm-sdk soarm-sdk ik --config configs/soarm-sdk.yaml 0.42 0.0 0.20
+conda run -n soarm-sdk soarm-sdk status --mock
+conda run -n soarm-sdk soarm-sdk fk shoulder_lift=-0.3 elbow_flex=0.5
+conda run -n soarm-sdk soarm-sdk ik 0.42 0.0 0.20
 ```
 
 Focused unit tests cover the online streaming controller. CLI mock paths and
