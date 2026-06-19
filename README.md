@@ -75,7 +75,7 @@ The detailed documentation is a single static page:
 - [Documentation site](https://oooer8.github.io/soarm-sdk/)
 - [Source: docs/index.html](docs/index.html)
 
-The documentation site is published from `docs/index.html` to the `gh-pages` branch for GitHub Pages.
+GitHub Actions uploads `docs/` as a Pages artifact and deploys it to GitHub Pages. No generated site files are committed.
 
 ## Repository Layout
 
