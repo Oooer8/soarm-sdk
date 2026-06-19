@@ -64,6 +64,7 @@ class MotionController:
                 moving_joints=set(targets),
                 duration=duration,
                 voltages=voltages,
+                enforce_step_limit=not wait or duration == 0,
             )
 
             moving_joints = set(targets)

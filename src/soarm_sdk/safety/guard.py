@@ -36,11 +36,13 @@ class SafetyGuard:
         moving_joints: set[str],
         duration: float,
         voltages: Mapping[int, float | None] | None = None,
+        enforce_step_limit: bool = True,
     ) -> None:
         self.check_not_emergency_stopped()
         ensure_known_joints(self.config, target)
         ensure_joint_limits(self.config, target)
-        ensure_step_limits(self.config, current, target, moving_joints)
+        if enforce_step_limit:
+            ensure_step_limits(self.config, current, target, moving_joints)
         ensure_velocity_feasible(self.config, current, target, moving_joints, duration)
         ensure_acceleration_feasible(self.config, current, target, moving_joints, duration)
         if voltages:

@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 import unittest
 
-from soarm_sdk import ConfigurationError, SOARM
+from soarm_sdk import ConfigurationError, LimitViolation, SOARM
 
 
 def _wait_for(predicate, *, timeout: float = 1.0) -> None:
@@ -16,6 +16,25 @@ def _wait_for(predicate, *, timeout: float = 1.0) -> None:
 
 
 class JointStreamingControllerTest(unittest.TestCase):
+    def test_blocking_move_allows_interpolated_target_larger_than_max_step(self) -> None:
+        arm = SOARM.mock()
+        arm.connect()
+        try:
+            arm.move_joints({"shoulder_pan": 0.8}, duration=1.1, wait=True)
+            position = arm.motion.read_positions_rad()["shoulder_pan"]
+            self.assertAlmostEqual(position, 0.8, delta=0.02)
+        finally:
+            arm.disconnect()
+
+    def test_single_setpoint_still_rejects_target_larger_than_max_step(self) -> None:
+        arm = SOARM.mock()
+        arm.connect()
+        try:
+            with self.assertRaises(LimitViolation):
+                arm.move_joints({"shoulder_pan": 0.8}, duration=1.1, wait=False)
+        finally:
+            arm.disconnect()
+
     def test_moves_toward_latest_target_with_mock_bus(self) -> None:
         arm = SOARM.mock()
         arm.connect()
