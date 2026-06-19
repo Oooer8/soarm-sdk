@@ -25,6 +25,8 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 soarm_sdk = [
+  "configs/*.yaml",
+  "configs/motors/*.yaml",
   "webapp/*",
   "webapp/vendor/*",
   "assets/soarm101/urdf/*",

@@ -1,5 +1,5 @@
 from .arm import SOARM
-from .config import ArmSettings, CalibrationMetadata, SOARMConfig
+from .config import ArmSettings, CalibrationMetadata, SOARMConfig, default_config_path
 from .demonstration import (
     Demonstration,
     DemonstrationRecorder,
@@ -53,6 +53,7 @@ __all__ = [
     "TimedJointTrajectory",
     "TrajectoryPoint",
     "UnsupportedFeature",
+    "default_config_path",
     "forward_kinematics",
     "home_positions",
     "load_demonstration",
