@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import time
 import unittest
 
-from soarm_sdk import ConfigurationError, LimitViolation, SOARM
+from soarm_sdk import ConfigurationError, LimitViolation, SOARM, SOARMConfig, default_config_path
 
 
 def _wait_for(predicate, *, timeout: float = 1.0) -> None:
@@ -13,6 +14,15 @@ def _wait_for(predicate, *, timeout: float = 1.0) -> None:
             return
         time.sleep(0.01)
     raise AssertionError("timed out waiting for condition")
+
+
+def _mock_arm_with_joint_limits(*, max_vel: float, max_acc: float) -> SOARM:
+    config = SOARMConfig.from_file(default_config_path())
+    joints = {
+        name: replace(joint, max_vel_rad_s=max_vel, max_acc_rad_s2=max_acc)
+        for name, joint in config.joints.items()
+    }
+    return SOARM.mock(replace(config, joints=joints))
 
 
 class JointStreamingControllerTest(unittest.TestCase):
@@ -36,7 +46,7 @@ class JointStreamingControllerTest(unittest.TestCase):
             arm.disconnect()
 
     def test_moves_toward_latest_target_with_mock_bus(self) -> None:
-        arm = SOARM.mock()
+        arm = _mock_arm_with_joint_limits(max_vel=1.5, max_acc=3.0)
         arm.connect()
         stream = arm.start_joint_stream(output_hz=100, target_timeout_s=0.5)
         try:
@@ -52,7 +62,7 @@ class JointStreamingControllerTest(unittest.TestCase):
             arm.disconnect()
 
     def test_holds_when_target_goes_stale(self) -> None:
-        arm = SOARM.mock()
+        arm = _mock_arm_with_joint_limits(max_vel=1.5, max_acc=3.0)
         arm.connect()
         stream = arm.start_joint_stream(output_hz=80, target_timeout_s=0.05)
         try:
@@ -102,6 +112,26 @@ class JointStreamingControllerTest(unittest.TestCase):
             self.assertGreater(snapshot.target_velocities["shoulder_pan"], 0.0)
             self.assertGreater(snapshot.velocities["shoulder_pan"], 0.0)
             self.assertGreater(snapshot.output["shoulder_pan"], 0.0)
+            self.assertIsNone(snapshot.error)
+        finally:
+            stream.stop()
+            arm.disconnect()
+
+    def test_direct_mode_outputs_latest_target_without_soft_motion_lag(self) -> None:
+        arm = SOARM.mock()
+        arm.connect()
+        stream = arm.start_joint_stream(
+            output_hz=100,
+            target_timeout_s=0.5,
+            mode="direct",
+        )
+        try:
+            stream.update_target({"shoulder_pan": 0.4})
+            _wait_for(lambda: stream.snapshot().writes >= 1)
+            snapshot = stream.snapshot()
+            self.assertEqual(snapshot.mode, "direct")
+            self.assertAlmostEqual(snapshot.output["shoulder_pan"], 0.4, delta=1e-9)
+            self.assertAlmostEqual(snapshot.velocities["shoulder_pan"], 0.0, delta=1e-9)
             self.assertIsNone(snapshot.error)
         finally:
             stream.stop()

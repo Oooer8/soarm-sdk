@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from .controller import MotionController
 
 
-JointStreamMode = Literal["arrival", "tracking"]
+JointStreamMode = Literal["arrival", "tracking", "direct"]
 
 
 @dataclass(frozen=True)
@@ -38,8 +38,8 @@ class JointStreamingController:
     """Online joint-space streaming controller for teleoperation.
 
     The controller accepts low-frequency target updates and owns the fixed-rate
-    output loop. Each output tick advances a velocity/acceleration-limited
-    reference toward the latest target, then writes one setpoint to the bus.
+    output loop. Smooth modes advance a velocity/acceleration-limited reference;
+    direct mode writes the latest target each output tick for lowest latency.
     """
 
     def __init__(
@@ -250,6 +250,9 @@ class JointStreamingController:
         target_velocity: float,
         dt: float,
     ) -> tuple[float, float]:
+        if self.mode == "direct":
+            self.config.joints[name].check_limit(target)
+            return target, 0.0
         if self.mode == "tracking":
             return self._step_tracking_joint(name, position, velocity, target, target_velocity, dt)
         return self._step_arrival_joint(name, position, velocity, target, dt)
@@ -373,8 +376,8 @@ class JointStreamingController:
             raise MotionError("output_hz must be positive")
         if self.target_timeout_s <= 0:
             raise MotionError("target_timeout_s must be positive")
-        if self.mode not in {"arrival", "tracking"}:
-            raise MotionError("joint stream mode must be one of: arrival, tracking")
+        if self.mode not in {"arrival", "tracking", "direct"}:
+            raise MotionError("joint stream mode must be one of: arrival, tracking, direct")
         if self.tracking_kp < 0:
             raise MotionError("tracking_kp must be non-negative")
         if self.tracking_feedforward < 0:
