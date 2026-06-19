@@ -4,7 +4,7 @@ import math
 import threading
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Mapping
+from typing import TYPE_CHECKING, Literal, Mapping
 
 from ..config import SOARMConfig
 from ..errors import ConfigurationError, MotionError
@@ -14,9 +14,13 @@ if TYPE_CHECKING:
     from .controller import MotionController
 
 
+JointStreamMode = Literal["arrival", "tracking"]
+
+
 @dataclass(frozen=True)
 class JointStreamSnapshot:
     running: bool
+    mode: str
     output_hz: float
     target_timeout_s: float
     writes: int
@@ -25,6 +29,7 @@ class JointStreamSnapshot:
     target_age_s: float | None
     output: dict[str, float]
     target: dict[str, float] | None
+    target_velocities: dict[str, float]
     velocities: dict[str, float]
     error: str | None = None
 
@@ -46,6 +51,9 @@ class JointStreamingController:
         output_hz: float | None = None,
         target_timeout_s: float = 0.15,
         joint_names: list[str] | None = None,
+        mode: JointStreamMode = "arrival",
+        tracking_kp: float = 8.0,
+        tracking_feedforward: float = 1.0,
     ) -> None:
         self.config = config
         self.motion = motion
@@ -53,6 +61,9 @@ class JointStreamingController:
         self.output_hz = float(output_hz or config.arm.control_hz)
         self.target_timeout_s = float(target_timeout_s)
         self.joint_names = list(joint_names or config.joint_names)
+        self.mode = mode
+        self.tracking_kp = float(tracking_kp)
+        self.tracking_feedforward = float(tracking_feedforward)
         self._validate_settings()
 
         self._lock = threading.RLock()
@@ -61,6 +72,7 @@ class JointStreamingController:
         self._output: dict[str, float] = {}
         self._velocities: dict[str, float] = {name: 0.0 for name in self.joint_names}
         self._target: dict[str, float] | None = None
+        self._target_velocities: dict[str, float] = {name: 0.0 for name in self.joint_names}
         self._target_at: float | None = None
         self._writes = 0
         self._overruns = 0
@@ -83,6 +95,7 @@ class JointStreamingController:
                 raise MotionError(f"Cannot start joint stream; missing current joints: {names}")
             self._velocities = {name: 0.0 for name in self.joint_names}
             self._target = None
+            self._target_velocities = {name: 0.0 for name in self.joint_names}
             self._target_at = None
             self._writes = 0
             self._overruns = 0
@@ -111,7 +124,9 @@ class JointStreamingController:
         clean = self._clean_targets(targets)
         now = time.monotonic()
         with self._lock:
+            target_velocities = self._estimate_target_velocities(clean, now)
             self._target = clean
+            self._target_velocities = target_velocities
             self._target_at = now
             self._stale = False
 
@@ -120,6 +135,7 @@ class JointStreamingController:
             target_age = None if self._target_at is None else time.monotonic() - self._target_at
             return JointStreamSnapshot(
                 running=self.running,
+                mode=self.mode,
                 output_hz=self.output_hz,
                 target_timeout_s=self.target_timeout_s,
                 writes=self._writes,
@@ -128,6 +144,7 @@ class JointStreamingController:
                 target_age_s=target_age,
                 output=dict(self._output),
                 target=None if self._target is None else dict(self._target),
+                target_velocities=dict(self._target_velocities),
                 velocities=dict(self._velocities),
                 error=self._error,
             )
@@ -177,6 +194,7 @@ class JointStreamingController:
     def _next_output(self, now: float, dt: float) -> tuple[dict[str, float], set[str]]:
         with self._lock:
             target = None if self._target is None else dict(self._target)
+            target_velocities = dict(self._target_velocities)
             target_at = self._target_at
             output = dict(self._output)
             velocities = dict(self._velocities)
@@ -191,6 +209,7 @@ class JointStreamingController:
             with self._lock:
                 for name in target:
                     self._velocities[name] = 0.0
+                    self._target_velocities[name] = 0.0
                 self._stale = True
             return output, set()
 
@@ -202,7 +221,15 @@ class JointStreamingController:
             position = float(output[name])
             wanted = float(target[name])
             velocity = float(velocities.get(name, 0.0))
-            next_position, next_velocity = self._step_joint(name, position, velocity, wanted, dt)
+            target_velocity = float(target_velocities.get(name, 0.0))
+            next_position, next_velocity = self._step_joint(
+                name,
+                position,
+                velocity,
+                wanted,
+                target_velocity,
+                dt,
+            )
             next_output[name] = next_position
             next_velocities[name] = next_velocity
             if abs(next_position - position) > 1e-12:
@@ -215,6 +242,19 @@ class JointStreamingController:
         return next_output, write_names
 
     def _step_joint(
+        self,
+        name: str,
+        position: float,
+        velocity: float,
+        target: float,
+        target_velocity: float,
+        dt: float,
+    ) -> tuple[float, float]:
+        if self.mode == "tracking":
+            return self._step_tracking_joint(name, position, velocity, target, target_velocity, dt)
+        return self._step_arrival_joint(name, position, velocity, target, dt)
+
+    def _step_arrival_joint(
         self,
         name: str,
         position: float,
@@ -240,8 +280,73 @@ class JointStreamingController:
             return target, 0.0
 
         next_position = position + step
+        limited_position = max(joint.min_rad, min(joint.max_rad, next_position))
+        if limited_position != next_position:
+            next_position = limited_position
+            next_velocity = 0.0
         joint.check_limit(next_position)
         return next_position, next_velocity
+
+    def _step_tracking_joint(
+        self,
+        name: str,
+        position: float,
+        velocity: float,
+        target: float,
+        target_velocity: float,
+        dt: float,
+    ) -> tuple[float, float]:
+        joint = self.config.joints[name]
+        error = target - position
+        if abs(error) <= 1e-9 and abs(target_velocity) <= 1e-9:
+            return target, 0.0
+
+        target_velocity = max(
+            -joint.max_vel_rad_s,
+            min(joint.max_vel_rad_s, float(target_velocity)),
+        )
+        desired_velocity = (
+            self.tracking_feedforward * target_velocity
+            + self.tracking_kp * error
+        )
+        desired_velocity = max(
+            -joint.max_vel_rad_s,
+            min(joint.max_vel_rad_s, desired_velocity),
+        )
+
+        max_delta_velocity = joint.max_acc_rad_s2 * dt
+        next_velocity = _move_toward(velocity, desired_velocity, max_delta_velocity)
+        if abs(next_velocity) > joint.max_vel_rad_s:
+            next_velocity = math.copysign(joint.max_vel_rad_s, next_velocity)
+
+        step = next_velocity * dt
+        if abs(target_velocity) <= 1e-6 and (abs(step) >= abs(error) or step * error < 0):
+            return target, 0.0
+
+        next_position = position + step
+        joint.check_limit(next_position)
+        return next_position, next_velocity
+
+    def _estimate_target_velocities(self, clean: dict[str, float], now: float) -> dict[str, float]:
+        target_velocities = {name: 0.0 for name in self.joint_names}
+        if self.mode != "tracking" or self._target is None or self._target_at is None:
+            return target_velocities
+
+        dt = now - self._target_at
+        if dt <= 1e-6:
+            return target_velocities
+
+        for name, target in clean.items():
+            previous = self._target.get(name)
+            if previous is None:
+                continue
+            joint = self.config.joints[name]
+            velocity = (float(target) - float(previous)) / dt
+            target_velocities[name] = max(
+                -joint.max_vel_rad_s,
+                min(joint.max_vel_rad_s, velocity),
+            )
+        return target_velocities
 
     def _clean_targets(self, targets: Mapping[str, float]) -> dict[str, float]:
         if not targets:
@@ -268,6 +373,12 @@ class JointStreamingController:
             raise MotionError("output_hz must be positive")
         if self.target_timeout_s <= 0:
             raise MotionError("target_timeout_s must be positive")
+        if self.mode not in {"arrival", "tracking"}:
+            raise MotionError("joint stream mode must be one of: arrival, tracking")
+        if self.tracking_kp < 0:
+            raise MotionError("tracking_kp must be non-negative")
+        if self.tracking_feedforward < 0:
+            raise MotionError("tracking_feedforward must be non-negative")
         unknown = set(self.joint_names) - set(self.config.joints)
         if unknown:
             names = ", ".join(sorted(unknown))

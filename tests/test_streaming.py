@@ -64,6 +64,30 @@ class JointStreamingControllerTest(unittest.TestCase):
             stream.stop()
             arm.disconnect()
 
+    def test_tracking_mode_uses_target_velocity_feedforward(self) -> None:
+        arm = SOARM.mock()
+        arm.connect()
+        stream = arm.start_joint_stream(
+            output_hz=100,
+            target_timeout_s=0.5,
+            mode="tracking",
+            tracking_kp=0.0,
+        )
+        try:
+            stream.update_target({"shoulder_pan": 0.0})
+            time.sleep(0.05)
+            stream.update_target({"shoulder_pan": 0.2})
+            _wait_for(lambda: stream.snapshot().writes >= 3)
+            snapshot = stream.snapshot()
+            self.assertEqual(snapshot.mode, "tracking")
+            self.assertGreater(snapshot.target_velocities["shoulder_pan"], 0.0)
+            self.assertGreater(snapshot.velocities["shoulder_pan"], 0.0)
+            self.assertGreater(snapshot.output["shoulder_pan"], 0.0)
+            self.assertIsNone(snapshot.error)
+        finally:
+            stream.stop()
+            arm.disconnect()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -83,7 +83,11 @@ low-frequency target updates and owns the fixed-rate output loop:
 from soarm_sdk import SOARM, ensure_user_config
 
 with SOARM.from_config(ensure_user_config()) as arm:
-    stream = arm.start_joint_stream(output_hz=200, target_timeout_s=0.15)
+    stream = arm.start_joint_stream(
+        output_hz=200,
+        target_timeout_s=0.15,
+        mode="tracking",
+    )
     try:
         stream.update_target(
             {
@@ -134,7 +138,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the package layering and import rules
 
 - `soarm_sdk.arm.SOARM` is the public Python facade; entry points should call it instead of wiring low-level services directly.
 - `soarm_sdk.hardware.ServoBus` owns Feetech register I/O only. Motion planning, safety policy, and calibration math live above the hardware layer.
-- `SOARM.stream_joints()` is a one-shot setpoint write kept for simple streaming callers. `SOARM.start_joint_stream()` is the long-lived online controller for teleoperation; it owns the output loop, latest-target slot, velocity/acceleration limiting, and timeout hold behavior.
+- `SOARM.stream_joints()` is a one-shot setpoint write kept for simple streaming callers. `SOARM.start_joint_stream()` is the long-lived online controller; `mode="arrival"` preserves the original stop-at-target behavior, while `mode="tracking"` adds target-velocity feedforward for teleoperation. Both modes own the output loop, latest-target slot, velocity/acceleration limiting, and timeout hold behavior.
 - `SOARM.follow_joint_trajectory()` is for replaying already-timestamped trajectories and demonstrations.
 - `soarm_sdk.application` holds shared Web/CLI payload and workflow helpers so UI code does not duplicate config, FK/IK, calibration, or safety rules.
 - `src/soarm_sdk/configs/` is the only tracked canonical config set. `ensure_user_config()` copies it to a user-editable split config under `configs/`, and `SOARMConfig.save()` preserves that split layout when saving back to the generated main path.

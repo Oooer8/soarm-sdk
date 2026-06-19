@@ -96,11 +96,17 @@ move_joints(wait=True)
 stream_joints(targets, dt=...)
   -> one-shot setpoint write for simple caller-driven streams
 
-start_joint_stream()
+start_joint_stream(mode="arrival")
   -> long-lived online controller
   -> latest-target overwrite slot
-  -> fixed-rate velocity/acceleration-limited output
-  -> timeout hold when target updates stop
+  -> fixed-rate velocity/acceleration-limited output that approaches a static target and brakes
+  -> default for conservative callers
+
+start_joint_stream(mode="tracking")
+  -> long-lived online controller for teleoperation
+  -> estimates target velocity from overwrite-latest updates
+  -> target-velocity feedforward plus position-error feedback
+  -> velocity/acceleration limits and timeout hold still apply
 
 follow_joint_trajectory()
   -> fixed-rate replay of an already-timestamped trajectory

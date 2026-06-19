@@ -36,6 +36,7 @@ from .model import ArmState, JointConfig, JointState, Pose
 from .motion import (
     InterpolationMode,
     JointStreamingController,
+    JointStreamMode,
     JointStreamSnapshot,
     TimedJointTrajectory,
     TrajectoryPoint,
@@ -55,6 +56,7 @@ __all__ = [
     "HardwareError",
     "JointConfig",
     "JointStreamingController",
+    "JointStreamMode",
     "JointStreamSnapshot",
     "JointState",
     "LimitViolation",

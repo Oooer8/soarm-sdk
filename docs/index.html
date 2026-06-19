@@ -1309,7 +1309,11 @@ with SOARM.from_config(ensure_user_config()) as arm:
           <pre><code>from soarm_sdk import SOARM, ensure_user_config
 
 with SOARM.from_config(ensure_user_config()) as arm:
-    stream = arm.start_joint_stream(output_hz=200, target_timeout_s=0.15)
+    stream = arm.start_joint_stream(
+        output_hz=200,
+        target_timeout_s=0.15,
+        mode="tracking",
+    )
     try:
         stream.update_target({
             "shoulder_pan": 0.0,
@@ -1321,8 +1325,9 @@ with SOARM.from_config(ensure_user_config()) as arm:
         stream.stop()</code></pre>
           <p>
             <code>stream_joints()</code> remains a one-shot setpoint write for simple caller-driven streams.
-            <code>start_joint_stream()</code> is the long-lived online controller for teleoperation, with latest-target overwrite semantics,
-            fixed-rate output, velocity/acceleration limiting, and timeout hold behavior.
+            <code>start_joint_stream()</code> is the long-lived online controller. Use <code>mode="arrival"</code> for conservative stop-at-target behavior
+            and <code>mode="tracking"</code> for teleoperation with target-velocity feedforward. Latest-target overwrite semantics, fixed-rate output,
+            velocity/acceleration limiting, and timeout hold behavior still apply.
           </p>
           <h3>Demonstration helpers</h3>
           <pre><code>from soarm_sdk import SOARM, ensure_user_config, record_demonstration, replay_demonstration
@@ -1428,7 +1433,7 @@ with SOARM.from_config(config_path) as arm:
             <li><code>ServoBus</code> caches sync readers and writes the Feetech seven-byte position command block that starts at <code>Acceleration</code>.</li>
             <li><code>SafetyGuard</code> and <code>safety.limits</code> centralize soft-limit, step, voltage, velocity, acceleration, and minimum-duration checks.</li>
             <li><code>SOARM</code> passes one reentrant I/O lock into <code>MotionController</code>, so online streaming writes and foreground state reads serialize on the same bus.</li>
-            <li><code>JointStreamingController</code> writes only when its output reference advances; reached or stale targets hold without redundant bus writes.</li>
+            <li><code>JointStreamingController</code> writes only when its output reference advances; <code>arrival</code> mode brakes into static targets, while <code>tracking</code> mode follows moving targets with target-velocity feedforward.</li>
             <li><code>SOARMConfig.save()</code> preserves split config files when saving back to a generated user config.</li>
             <li><code>soarm_sdk.motor_profile</code> and <code>soarm_sdk.workflows</code> are compatibility re-export modules; new internal code should use <code>hardware.motor_profile</code> and <code>application.workflows</code>.</li>
           </ul>
