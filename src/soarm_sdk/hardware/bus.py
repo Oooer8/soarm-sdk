@@ -565,18 +565,6 @@ class ServoBus:
                 self.enable_torque(servo_id)
             self._position_ready.add(servo_id)
 
-    def _write_profile_if_needed(self, ids: Sequence[int], *, speed: int, acceleration: int) -> None:
-        speed = max(0, min(MAX_SPEED_SETTING, int(speed)))
-        acceleration = max(0, min(254, int(acceleration)))
-        profile = (speed, acceleration)
-        changed = [servo_id for servo_id in ids if self._profile_cache.get(servo_id) != profile]
-        if not changed:
-            return
-        self._sync_write_register(_ACCELERATION_REGISTER, {servo_id: acceleration for servo_id in changed})
-        self._sync_write_register(_GOAL_VELOCITY_REGISTER, {servo_id: speed for servo_id in changed})
-        for servo_id in changed:
-            self._profile_cache[servo_id] = profile
-
     def _sync_write_position_command(
         self,
         positions: Mapping[int, int],

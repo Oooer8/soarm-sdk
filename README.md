@@ -15,8 +15,10 @@ SOARM SDK keeps hardware access, calibration, safety checks, kinematics, motion 
 - Read-only health checks before calibration or motion
 - Interactive calibration and soft-limit generation
 - Joint-space motion with safety checks
+- Fixed-rate timed trajectory replay with linear or PCHIP interpolation
 - FK/IK helpers for the SOARM geometry
 - Joint-space teaching record and replay
+- Feetech motor-profile drift checks and register writes
 - Local Web GUI for setup, calibration, URDF visualization, feedback, and slider control
 - Mock bus for development without hardware
 
@@ -100,6 +102,21 @@ src/soarm_sdk/     Python package
 ```
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the package layering and import rules.
+
+## Implementation Notes
+
+- `soarm_sdk.arm.SOARM` is the public Python facade; entry points should call it instead of wiring low-level services directly.
+- `soarm_sdk.hardware.ServoBus` owns Feetech register I/O only. Motion planning, safety policy, and calibration math live above the hardware layer.
+- `soarm_sdk.application` holds shared Web/CLI payload and workflow helpers so UI code does not duplicate config, FK/IK, calibration, or safety rules.
+- `SOARMConfig.save()` preserves split configs when saving back to `configs/soarm-sdk.yaml`: runtime settings go to `configs/runtime.yaml`, and motor profile settings go to `configs/motors/feetech_sts3215.yaml`.
+- No dedicated unit-test suite is present yet; use mock CLI paths plus Python compile checks for lightweight local regression validation.
+
+```bash
+conda run -n soarm-sdk python -m compileall src/soarm_sdk
+conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock
+conda run -n soarm-sdk soarm-sdk fk --config configs/soarm-sdk.yaml shoulder_lift=-0.3 elbow_flex=0.5
+conda run -n soarm-sdk soarm-sdk ik --config configs/soarm-sdk.yaml 0.42 0.0 0.20
+```
 
 ## License
 

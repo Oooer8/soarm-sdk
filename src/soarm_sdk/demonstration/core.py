@@ -11,7 +11,7 @@ from typing import Any, Callable, Iterable, Mapping, TYPE_CHECKING
 from ..config import SOARMConfig
 from ..errors import ConfigurationError, LimitViolation, MotionError
 from ..motion import InterpolationMode, TimedJointTrajectory, TrajectoryPoint
-from ..safety.limits import minimum_rest_to_rest_duration
+from ..safety.limits import minimum_motion_duration
 
 if TYPE_CHECKING:
     from ..arm import SOARM
@@ -432,7 +432,7 @@ class DemonstrationReplayer:
         local_waypoint = dict(waypoint)
         local_duration = duration
         for _attempt in range(_MAX_STEP_RETRIES):
-            minimum = _minimum_duration(
+            minimum = minimum_motion_duration(
                 self.arm.config,
                 local_current,
                 local_waypoint,
@@ -579,28 +579,6 @@ def _format_float(value: float | None) -> str:
     if value is None:
         return "None"
     return f"{float(value):.4f}"
-
-
-def _minimum_duration(
-    config: SOARMConfig,
-    current: Mapping[str, float],
-    target: Mapping[str, float],
-    moving_joints: set[str],
-) -> float:
-    duration = 0.0
-    for name in moving_joints:
-        if name not in current:
-            continue
-        joint = config.joints[name]
-        duration = max(
-            duration,
-            minimum_rest_to_rest_duration(
-                float(target[name]) - float(current[name]),
-                joint.max_vel_rad_s,
-                joint.max_acc_rad_s2,
-            ),
-        )
-    return duration
 
 
 def validate_demonstration_for_config(

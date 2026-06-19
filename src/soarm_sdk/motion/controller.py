@@ -7,7 +7,7 @@ from ..config import SOARMConfig
 from ..errors import HardwareError, LimitViolation, MotionError
 from ..motion.trajectory import InterpolationMode, TimedJointTrajectory, TrajectoryPoint, linear_trajectory
 from ..safety import SafetyGuard
-from ..safety.limits import minimum_rest_to_rest_duration
+from ..safety.limits import minimum_motion_duration
 
 
 class MotionController:
@@ -168,7 +168,7 @@ class MotionController:
         first_target = trajectory.points[0].positions
         first_duration = max(
             1.0 / float(self.config.arm.control_hz),
-            self._minimum_segment_duration(current, first_target, moving_joints),
+            minimum_motion_duration(self.config, current, first_target, moving_joints),
             1e-6,
         )
         self.safety.validate_motion(
@@ -191,24 +191,3 @@ class MotionController:
                         f"{name} interpolated step {delta:.4f} rad exceeds max_step_rad "
                         f"{self.config.arm.max_step_rad:.4f}; increase output_hz or reduce speed"
                     )
-
-    def _minimum_segment_duration(
-        self,
-        current: Mapping[str, float],
-        target: Mapping[str, float],
-        moving_joints: set[str],
-    ) -> float:
-        duration = 0.0
-        for name in moving_joints:
-            if name not in current:
-                continue
-            joint = self.config.joints[name]
-            duration = max(
-                duration,
-                minimum_rest_to_rest_duration(
-                    float(target[name]) - float(current[name]),
-                    joint.max_vel_rad_s,
-                    joint.max_acc_rad_s2,
-                ),
-            )
-        return duration

@@ -8,7 +8,7 @@ from ..calibration import build_joint_calibration_from_direction
 from ..config import SOARMConfig
 from ..kinematics import forward_kinematics, home_positions, solve_position_ik
 from ..model import JointState
-from ..safety.limits import minimum_rest_to_rest_duration
+from ..safety.limits import minimum_motion_duration
 
 
 def config_payload(config_path: Path, config: SOARMConfig) -> dict[str, Any]:
@@ -125,20 +125,11 @@ def recommended_move_duration(
     target: Mapping[str, float],
     minimum: float = 0.2,
 ) -> float:
-    duration = minimum
-    for name, target_position in target.items():
-        joint = config.joints.get(name)
-        if joint is None:
-            continue
-        current_position = float(current.get(name, 0.0))
-        delta = abs(float(target_position) - current_position)
-        required = minimum_rest_to_rest_duration(
-            delta,
-            joint.max_vel_rad_s,
-            joint.max_acc_rad_s2,
-        )
-        duration = max(duration, required)
-    return duration
+    current_for_targets = {
+        str(name): float(current.get(name, 0.0))
+        for name in target
+    }
+    return max(minimum, minimum_motion_duration(config, current_for_targets, target))
 
 
 def apply_sweep_calibration(

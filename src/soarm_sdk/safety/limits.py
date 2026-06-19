@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Mapping
+from typing import Iterable, Mapping
 
 from ..config import SOARMConfig
 from ..errors import ConfigurationError, LimitViolation
@@ -21,6 +21,34 @@ def minimum_rest_to_rest_duration(distance: float, max_vel: float, max_acc: floa
     if distance <= accel_decel_distance:
         return 2.0 * (distance / max_acc) ** 0.5
     return distance / max_vel + max_vel / max_acc
+
+
+def minimum_motion_duration(
+    config: SOARMConfig,
+    current: Mapping[str, float],
+    target: Mapping[str, float],
+    moving_joints: Iterable[str] | None = None,
+) -> float:
+    """Return the longest rest-to-rest duration required by moving joints.
+
+    This helper intentionally only computes a duration. Limit checks and
+    unknown-joint errors stay in the callers that can report the best context.
+    """
+    duration = 0.0
+    names = target.keys() if moving_joints is None else moving_joints
+    for name in names:
+        if name not in config.joints or name not in current or name not in target:
+            continue
+        joint = config.joints[name]
+        duration = max(
+            duration,
+            minimum_rest_to_rest_duration(
+                float(target[name]) - float(current[name]),
+                joint.max_vel_rad_s,
+                joint.max_acc_rad_s2,
+            ),
+        )
+    return duration
 
 
 def ensure_known_joints(config: SOARMConfig, targets: Mapping[str, float]) -> None:

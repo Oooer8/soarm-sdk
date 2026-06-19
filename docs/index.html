@@ -1329,7 +1329,7 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
                 <tr><th>Layer</th><th>Default</th><th>Purpose</th></tr>
               </thead>
               <tbody>
-                <tr><td>Trajectory input</td><td>60 Hz</td><td>High-level targets from policy, user input, or planner.</td></tr>
+                <tr><td>Trajectory input</td><td>30 Hz</td><td>High-level targets from policy, user input, or planner.</td></tr>
                 <tr><td>Controller interpolation</td><td>200 Hz</td><td>Convert targets into regular setpoints.</td></tr>
                 <tr><td>Feedback sampling</td><td>100 Hz</td><td>Read and cache real joint state.</td></tr>
                 <tr><td>Web state sync</td><td>30 Hz</td><td>Send cached state to the browser.</td></tr>
@@ -1398,16 +1398,24 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
           <div class="callout ok">
             Keep high-level planning out of <code>ServoBus</code>. Motion planning, retargeting, and safety policy should stay in the motion and SDK layers.
           </div>
+          <ul>
+            <li><code>ServoBus</code> caches sync readers and writes the Feetech seven-byte position command block that starts at <code>Acceleration</code>.</li>
+            <li><code>SafetyGuard</code> and <code>safety.limits</code> centralize soft-limit, step, voltage, velocity, acceleration, and minimum-duration checks.</li>
+            <li><code>SOARMConfig.save()</code> preserves split config files when saving back to <code>configs/soarm-sdk.yaml</code>.</li>
+            <li><code>soarm_sdk.motor_profile</code> and <code>soarm_sdk.workflows</code> are compatibility re-export modules; new internal code should use <code>hardware.motor_profile</code> and <code>application.workflows</code>.</li>
+          </ul>
         </section>
 
         <section id="validation">
           <h2>Development And Validation</h2>
           <p>Use mock checks before touching hardware:</p>
-          <pre><code>conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock
+          <pre><code>conda run -n soarm-sdk python -m compileall src/soarm_sdk
+conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock
 conda run -n soarm-sdk soarm-sdk fk --config configs/soarm-sdk.yaml shoulder_lift=-0.3 elbow_flex=0.5
 conda run -n soarm-sdk soarm-sdk ik --config configs/soarm-sdk.yaml 0.42 0.0 0.20
 conda run -n soarm-sdk soarm-sdk record-demo /tmp/soarm-demo.json --config configs/soarm-sdk.yaml --mock --duration 1
 conda run -n soarm-sdk soarm-sdk replay-demo /tmp/soarm-demo.json --config configs/soarm-sdk.yaml --dry-run</code></pre>
+          <p>The repository currently has no dedicated unit-test suite, so compile checks and mock CLI paths are the lightweight regression baseline.</p>
           <p>When changing code, keep these boundaries intact:</p>
           <ul>
             <li><code>ServoBus</code> owns register I/O only.</li>

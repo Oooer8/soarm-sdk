@@ -221,7 +221,6 @@ class AllJointsRangeRecorder:
     _buffers: dict[str, deque[int]] = field(init=False, default_factory=dict)
     _stop_event: threading.Event = field(init=False, default_factory=threading.Event)
     _thread: threading.Thread | None = field(init=False, default=None)
-    _error: Exception | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
         if self.poll_interval <= 0:
@@ -289,15 +288,12 @@ class AllJointsRangeRecorder:
     def stop(self) -> dict[str, JointRangeResult]:
         """Stop recording and return a :class:`JointRangeResult` per joint.
 
-        Raises :class:`CalibrationError` if the background thread encountered
-        a fatal error.  Individual joints that are under-excited are reported
-        via :attr:`JointRangeResult.well_excited` rather than raising.
+        Individual joints that are under-excited are reported via
+        :attr:`JointRangeResult.well_excited` rather than raising.
         """
         self._stop_event.set()
         if self._thread is not None:
             self._thread.join(timeout=2.0)
-        if self._error is not None:
-            raise self._error
 
         results: dict[str, JointRangeResult] = {}
         for name in self.config.joints:
