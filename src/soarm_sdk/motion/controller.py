@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 import time
 from typing import Mapping, Sequence
 
@@ -11,13 +12,22 @@ from ..safety.limits import minimum_motion_duration
 
 
 class MotionController:
-    def __init__(self, *, config: SOARMConfig, bus, safety: SafetyGuard) -> None:
+    def __init__(
+        self,
+        *,
+        config: SOARMConfig,
+        bus,
+        safety: SafetyGuard,
+        io_lock: threading.RLock | None = None,
+    ) -> None:
         self.config = config
         self.bus = bus
         self.safety = safety
+        self.io_lock = io_lock or threading.RLock()
 
     def read_positions_rad(self) -> dict[str, float]:
-        ticks = self.bus.read_positions()
+        with self.io_lock:
+            ticks = self.bus.read_positions()
         return {
             name: joint.tick_to_rad(ticks[joint.id])
             for name, joint in self.config.joints.items()
@@ -41,45 +51,46 @@ class MotionController:
         using ``duration`` as the caller's intended command interval, writes one
         setpoint, and returns immediately.
         """
-        current = self.read_positions_rad()
-        merged = dict(current)
-        for name, position in targets.items():
-            merged[name] = float(position)
+        with self.io_lock:
+            current = self.read_positions_rad()
+            merged = dict(current)
+            for name, position in targets.items():
+                merged[name] = float(position)
 
-        voltages = self.bus.read_voltages(strict=False)
-        self.safety.validate_motion(
-            current=current,
-            target=merged,
-            moving_joints=set(targets),
-            duration=duration,
-            voltages=voltages,
-        )
+            voltages = self.bus.read_voltages(strict=False)
+            self.safety.validate_motion(
+                current=current,
+                target=merged,
+                moving_joints=set(targets),
+                duration=duration,
+                voltages=voltages,
+            )
 
-        moving_joints = set(targets)
+            moving_joints = set(targets)
 
-        if not wait or duration == 0:
-            self._write_joint_positions(
+            if not wait or duration == 0:
+                self._write_joint_positions(
+                    merged,
+                    joint_names=moving_joints,
+                )
+                return
+
+            points = linear_trajectory(
+                current,
                 merged,
-                joint_names=moving_joints,
+                duration=duration,
+                hz=self.config.arm.control_hz,
             )
-            return
-
-        points = linear_trajectory(
-            current,
-            merged,
-            duration=duration,
-            hz=self.config.arm.control_hz,
-        )
-        start_time = time.monotonic()
-        for point in points:
-            self._write_joint_positions(
-                point.positions,
-                joint_names=moving_joints,
-            )
-            deadline = start_time + point.time_from_start
-            sleep_time = deadline - time.monotonic()
-            if sleep_time > 0:
-                time.sleep(sleep_time)
+            start_time = time.monotonic()
+            for point in points:
+                self._write_joint_positions(
+                    point.positions,
+                    joint_names=moving_joints,
+                )
+                deadline = start_time + point.time_from_start
+                sleep_time = deadline - time.monotonic()
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
 
     def stream_joints(self, targets: Mapping[str, float], *, dt: float | None = None) -> None:
         """Write one streaming joint target.
@@ -132,10 +143,11 @@ class MotionController:
         return writes
 
     def stop(self) -> None:
-        ticks = self.bus.read_positions()
-        positions = {servo_id: tick for servo_id, tick in ticks.items() if tick is not None}
-        if positions:
-            self.bus.write_positions(positions)
+        with self.io_lock:
+            ticks = self.bus.read_positions()
+            positions = {servo_id: tick for servo_id, tick in ticks.items() if tick is not None}
+            if positions:
+                self.bus.write_positions(positions)
 
     def write_joint_setpoint(
         self,
@@ -164,7 +176,8 @@ class MotionController:
             ticks[joint.id] = joint.rad_to_tick(float(position))
         if not ticks:
             return
-        result = self.bus.write_positions(ticks)
+        with self.io_lock:
+            result = self.bus.write_positions(ticks)
         failed = [servo_id for servo_id, ok in result.items() if not ok]
         if failed:
             raise HardwareError(f"Position write failed for servos: {failed}")
@@ -176,7 +189,8 @@ class MotionController:
         output_points: Sequence[TrajectoryPoint],
     ) -> None:
         current = self.read_positions_rad()
-        voltages = self.bus.read_voltages(strict=False)
+        with self.io_lock:
+            voltages = self.bus.read_voltages(strict=False)
         moving_joints = set(trajectory.joint_names)
         first_target = trajectory.points[0].positions
         first_duration = max(

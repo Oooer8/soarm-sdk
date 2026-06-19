@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from pathlib import Path
 from typing import Callable, Mapping, Sequence
 
@@ -45,7 +46,13 @@ class SOARM:
         self._config_path: Path | None = None
         self.bus = bus or self._make_bus(config, mock=mock)
         self.safety = SafetyGuard(config)
-        self.motion = MotionController(config=config, bus=self.bus, safety=self.safety)
+        self._io_lock = threading.RLock()
+        self.motion = MotionController(
+            config=config,
+            bus=self.bus,
+            safety=self.safety,
+            io_lock=self._io_lock,
+        )
         self._enabled = False
         self._motor_profile_applied = False
 
@@ -407,7 +414,12 @@ class SOARM:
         # ------------------------------------------------------------------
         self.config = self.config.replace_joint_calibrations(calibrations)
         self.safety = SafetyGuard(self.config)
-        self.motion = MotionController(config=self.config, bus=self.bus, safety=self.safety)
+        self.motion = MotionController(
+            config=self.config,
+            bus=self.bus,
+            safety=self.safety,
+            io_lock=self._io_lock,
+        )
         output = Path(output_path) if output_path is not None else self._config_path
         if output is None:
             raise CalibrationError("No output path provided for calibrated config")

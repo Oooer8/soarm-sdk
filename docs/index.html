@@ -1420,6 +1420,7 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
           <ul>
             <li><code>ServoBus</code> caches sync readers and writes the Feetech seven-byte position command block that starts at <code>Acceleration</code>.</li>
             <li><code>SafetyGuard</code> and <code>safety.limits</code> centralize soft-limit, step, voltage, velocity, acceleration, and minimum-duration checks.</li>
+            <li><code>SOARM</code> passes one reentrant I/O lock into <code>MotionController</code>, so online streaming writes and foreground state reads serialize on the same bus.</li>
             <li><code>JointStreamingController</code> writes only when its output reference advances; reached or stale targets hold without redundant bus writes.</li>
             <li><code>SOARMConfig.save()</code> preserves split config files when saving back to <code>configs/soarm-sdk.yaml</code>.</li>
             <li><code>soarm_sdk.motor_profile</code> and <code>soarm_sdk.workflows</code> are compatibility re-export modules; new internal code should use <code>hardware.motor_profile</code> and <code>application.workflows</code>.</li>

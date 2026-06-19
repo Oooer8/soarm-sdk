@@ -146,6 +146,8 @@ one fully merged YAML file.
 - `ServoBus.write_positions()` writes the Feetech STS/SMS seven-byte position
   command block starting at `Acceleration`, because writing only `Goal_Position`
   does not reliably trigger STS3215 movement.
+- `SOARM` passes one reentrant I/O lock into `MotionController`, so online
+  streaming writes and foreground state reads serialize on the same bus.
 - `JointStreamingController` only writes when its output reference advances.
   Once a target is reached or target updates time out, it holds locally instead
   of sending redundant bus writes.
