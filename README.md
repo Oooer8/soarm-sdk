@@ -29,32 +29,32 @@ pip install -e .
 This workspace uses the `soarm-sdk` conda environment for local validation:
 
 ```bash
-conda run -n soarm-sdk python -m soarm.cli status --config configs/soarm.yaml --mock
+conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock
 ```
 
 ## Quick Start
 
 ```bash
-soarm ports --config configs/soarm.yaml
-soarm status --config configs/soarm.yaml
-soarm calibrate --config configs/soarm.yaml --output configs/soarm.yaml
-soarm home --config configs/soarm.yaml --duration 2.0
-soarm web --config configs/soarm.yaml
+soarm-sdk ports --config configs/soarm-sdk.yaml
+soarm-sdk status --config configs/soarm-sdk.yaml
+soarm-sdk calibrate --config configs/soarm-sdk.yaml --output configs/soarm-sdk.yaml
+soarm-sdk home --config configs/soarm-sdk.yaml --duration 2.0
+soarm-sdk web --config configs/soarm-sdk.yaml
 ```
 
 For no-hardware checks, add `--mock` where supported:
 
 ```bash
-soarm status --config configs/soarm.yaml --mock
-soarm web --config configs/soarm.yaml --mock
+soarm-sdk status --config configs/soarm-sdk.yaml --mock
+soarm-sdk web --config configs/soarm-sdk.yaml --mock
 ```
 
 ## Python API
 
 ```python
-from soarm import SOARM
+from soarm_sdk import SOARM
 
-with SOARM.from_config("configs/soarm.yaml") as arm:
+with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
     arm.enable()
     arm.move_home(duration=1.5)
     arm.move_joints(
@@ -84,7 +84,7 @@ configs/       Example SOARM, runtime, and motor-profile configs
 docs/          Single-page documentation site
 examples/      Small Python API examples
 scripts/       Bench and measurement utilities
-src/soarm/     Python package
+src/soarm_sdk/     Python package
   application/ Web/CLI payload and workflow helpers
   calibration/ Calibration capture and sweep logic
   cli/         Command-line entry point and command dispatch

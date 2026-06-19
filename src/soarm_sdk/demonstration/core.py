@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from ..arm import SOARM
 
 
-DEMONSTRATION_FORMAT = "soarm.demonstration.v1"
+DEMONSTRATION_FORMAT = "soarm_sdk.demonstration.v1"
 _STEP_SAFETY_FACTOR = 0.8
 _POSITION_TOLERANCE_RAD = 0.03
 _MAX_STEP_RETRIES = 5
@@ -276,7 +276,7 @@ class DemonstrationRecorder:
                 "arm_name": self.arm.config.arm.name,
                 "sample_hz": self.sample_hz,
                 "unit": "rad",
-                "source": "soarm.demonstration",
+                "source": "soarm_sdk.demonstration",
             },
         )
         if output_path is not None:

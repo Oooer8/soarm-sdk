@@ -6,11 +6,11 @@ import time
 from pathlib import Path
 from typing import Any, Mapping
 
-from soarm.config import SOARMConfig
-from soarm.hardware import ServoBus
-from soarm.motion import MotionController
-from soarm.safety import SafetyGuard
-from soarm.testing import MockBus
+from soarm_sdk.config import SOARMConfig
+from soarm_sdk.hardware import ServoBus
+from soarm_sdk.motion import MotionController
+from soarm_sdk.safety import SafetyGuard
+from soarm_sdk.testing import MockBus
 
 
 def percentile(values: list[float], q: float) -> float:
@@ -71,7 +71,7 @@ class RecordingBus:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Measure SOARM bus/control frequencies.")
-    parser.add_argument("--config", default="configs/soarm.yaml")
+    parser.add_argument("--config", default="configs/soarm-sdk.yaml")
     parser.add_argument("--mock", action="store_true")
     parser.add_argument("--iterations", type=int, default=100)
     parser.add_argument("--warmup", type=int, default=10)

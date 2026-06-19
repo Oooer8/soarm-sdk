@@ -51,7 +51,7 @@ class SOARM:
         return arm
 
     @classmethod
-    def mock(cls, config: SOARMConfig | str | Path = "configs/soarm.yaml") -> "SOARM":
+    def mock(cls, config: SOARMConfig | str | Path = "configs/soarm-sdk.yaml") -> "SOARM":
         if not isinstance(config, SOARMConfig):
             config = SOARMConfig.from_file(config)
         return cls(config, mock=True)

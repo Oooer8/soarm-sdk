@@ -48,7 +48,7 @@ def _strip_ansi(text: str) -> str:
 
 
 class SOARMWebHandler(BaseHTTPRequestHandler):
-    config_path = Path("configs/soarm.yaml")
+    config_path = Path("configs/soarm-sdk.yaml")
     mock = False
     session_state: dict[str, Any] = {
         "status_passed": False,
@@ -502,7 +502,7 @@ class SOARMWebHandler(BaseHTTPRequestHandler):
                         "repository": "MuammerBay/isaac_so_arm101",
                         "url": "https://github.com/MuammerBay/isaac_so_arm101/blob/main/src/isaac_so_arm101/robots/trs_so101/urdf/so_arm101.urdf",
                     },
-                    "viewer": "soarm-web",
+                    "viewer": "soarm-sdk-web",
                     "joint_order": model_state["joint_order"],
                     "config": config_payload(self.config_path, config),
                     "model_joints": model_state["model_joints"],
@@ -838,7 +838,7 @@ class SOARMWebHandler(BaseHTTPRequestHandler):
             target=self._feedback_loop,
             args=(signature, stop_event, mock),
             daemon=True,
-            name="soarm-feedback",
+            name="soarm-sdk-feedback",
         )
         with self._feedback_lock():
             self.session_state["_feedback_signature"] = signature
@@ -1025,7 +1025,7 @@ class SOARMWebHandler(BaseHTTPRequestHandler):
 
 def run_web(
     *,
-    config_path: str | Path = "configs/soarm.yaml",
+    config_path: str | Path = "configs/soarm-sdk.yaml",
     host: str = "127.0.0.1",
     port: int = 8765,
     mock: bool = False,

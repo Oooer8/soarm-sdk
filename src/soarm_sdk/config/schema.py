@@ -68,7 +68,7 @@ def _merge_mapping_section(
 
 @dataclass(frozen=True)
 class ArmSettings:
-    name: str = "soarm"
+    name: str = "soarm-sdk"
     port: str | None = None
     baudrate: int = DEFAULT_BAUDRATE
     control_hz: int = DEFAULT_CONTROL_HZ
@@ -80,7 +80,7 @@ class ArmSettings:
     def from_mapping(cls, data: Mapping[str, Any] | None) -> "ArmSettings":
         data = data or {}
         settings = cls(
-            name=str(data.get("name", "soarm")),
+            name=str(data.get("name", "soarm-sdk")),
             port=data.get("port"),
             baudrate=int(data.get("baudrate", DEFAULT_BAUDRATE)),
             control_hz=int(data.get("control_hz", DEFAULT_CONTROL_HZ)),

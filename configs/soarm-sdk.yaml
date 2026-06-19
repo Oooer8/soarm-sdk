@@ -2,7 +2,7 @@ includes:
   runtime: runtime.yaml
   motor_profile: motors/feetech_sts3215.yaml
 arm:
-  name: soarm-follower
+  name: soarm-sdk-follower
   port: /dev/cu.usbmodem5A7C1190351
   baudrate: 1000000
 calibration:

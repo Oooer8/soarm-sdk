@@ -23,7 +23,7 @@ SOARM_URDF_PATH = Path(__file__).resolve().parents[1] / "assets" / "soarm101" / 
 
 
 def _add_common(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--config", default="configs/soarm.yaml", help="Path to SOARM YAML config")
+    parser.add_argument("--config", default="configs/soarm-sdk.yaml", help="Path to SOARM YAML config")
     parser.add_argument("--mock", action="store_true", help="Use the in-memory mock bus")
 
 
@@ -87,16 +87,16 @@ def _joint_register_snapshot(arm: SOARM, joint_name: str, *, target_rad: float |
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="soarm")
+    parser = argparse.ArgumentParser(prog=Path(sys.argv[0]).name)
     sub = parser.add_subparsers(dest="command", required=True)
 
     ports = sub.add_parser("ports", help="List candidate servo bus ports and update config")
-    ports.add_argument("--config", default="configs/soarm.yaml", help="Path to SOARM YAML config to update")
+    ports.add_argument("--config", default="configs/soarm-sdk.yaml", help="Path to SOARM YAML config to update")
     ports.add_argument("--port", default=None, help="Port to write when more than one candidate is found")
     ports.add_argument("--no-update", action="store_true", help="List ports without updating config")
 
     web = sub.add_parser("web", help="Serve the browser-based setup and status checker")
-    web.add_argument("--config", default="configs/soarm.yaml", help="Path to SOARM YAML config")
+    web.add_argument("--config", default="configs/soarm-sdk.yaml", help="Path to SOARM YAML config")
     web.add_argument("--host", default="127.0.0.1", help="Host interface to bind")
     web.add_argument("--port", type=int, default=8765, help="HTTP port to bind")
     web.add_argument("--mock", action="store_true", help="Default status checks to the in-memory mock bus")
@@ -124,11 +124,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     fk = sub.add_parser("fk", help="Compute SOARM forward kinematics from JOINT=RAD targets")
-    fk.add_argument("--config", default="configs/soarm.yaml", help="Path to SOARM YAML config")
+    fk.add_argument("--config", default="configs/soarm-sdk.yaml", help="Path to SOARM YAML config")
     fk.add_argument("targets", nargs="*")
 
     ik = sub.add_parser("ik", help="Compute an approximate SOARM IK solution for a target point")
-    ik.add_argument("--config", default="configs/soarm.yaml", help="Path to SOARM YAML config")
+    ik.add_argument("--config", default="configs/soarm-sdk.yaml", help="Path to SOARM YAML config")
     ik.add_argument("x", type=float)
     ik.add_argument("y", type=float)
     ik.add_argument("z", type=float)
@@ -437,7 +437,8 @@ def main(argv: list[str] | None = None) -> int:
                 _print_report("Pre-calibration status:", preflight)
                 if not calibration_ready_from_report(preflight):
                     print(
-                        "soarm: hardware is not ready for calibration; fix the status failures first.",
+                        f"{Path(sys.argv[0]).name}: hardware is not ready for calibration; "
+                        "fix the status failures first.",
                         file=sys.stderr,
                     )
                     return 1
@@ -446,7 +447,8 @@ def main(argv: list[str] | None = None) -> int:
                 _print_report("Post-calibration status:", postflight)
                 if not _diagnostics_passed(postflight):
                     print(
-                        "soarm: calibration was saved, but the post-calibration status check failed.",
+                        f"{Path(sys.argv[0]).name}: calibration was saved, but the "
+                        "post-calibration status check failed.",
                         file=sys.stderr,
                     )
                     return 1
@@ -455,7 +457,7 @@ def main(argv: list[str] | None = None) -> int:
             elif args.command == "disable":
                 arm.disable()
     except (SOARMError, ValueError) as exc:
-        print(f"soarm: {exc}", file=sys.stderr)
+        print(f"{Path(sys.argv[0]).name}: {exc}", file=sys.stderr)
         return 1
 
     return 0

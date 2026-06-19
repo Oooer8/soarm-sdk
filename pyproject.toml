@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "soarm"
+name = "soarm-sdk"
 version = "0.1.0"
 description = "Python SDK for controlling the SOARM robotic arm."
 readme = "README.md"
@@ -18,13 +18,13 @@ dependencies = [
 ]
 
 [project.scripts]
-soarm = "soarm.cli:main"
+soarm-sdk = "soarm_sdk.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-soarm = [
+soarm_sdk = [
   "webapp/*",
   "webapp/vendor/*",
   "assets/soarm101/urdf/*",

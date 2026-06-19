@@ -5,9 +5,9 @@ import statistics
 import time
 from pathlib import Path
 
-from soarm.config import SOARMConfig
-from soarm.hardware import ServoBus
-from soarm.testing import MockBus
+from soarm_sdk.config import SOARMConfig
+from soarm_sdk.hardware import ServoBus
+from soarm_sdk.testing import MockBus
 
 
 def percentile(values: list[float], q: float) -> float:
@@ -40,7 +40,7 @@ def parse_args() -> argparse.Namespace:
             "writing the current servo ticks back to the same servos."
         )
     )
-    parser.add_argument("--config", default="configs/soarm.yaml")
+    parser.add_argument("--config", default="configs/soarm-sdk.yaml")
     parser.add_argument("--mock", action="store_true", help="Use the in-memory mock bus")
     parser.add_argument("--iterations", type=int, default=50)
     parser.add_argument("--warmup", type=int, default=5)
