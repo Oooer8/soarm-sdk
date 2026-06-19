@@ -12,5 +12,5 @@ pid:
   d: 32
 overrides:
   gripper:
-    max_torque_limit: 500
-    protection_current: 250
+    max_torque_limit: 1000
+    protection_current: 500
