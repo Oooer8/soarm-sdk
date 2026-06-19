@@ -1131,7 +1131,7 @@
         <div class="signal-grid" aria-label="Documentation highlights">
           <div class="signal"><strong>One SDK surface</strong><span>Python API, CLI, local Web GUI, calibration, motion, and safety share the same config.</span></div>
           <div class="signal"><strong>Read-first workflow</strong><span>Status and mock checks come before live calibration or motion.</span></div>
-          <div class="signal"><strong>GitHub Pages ready</strong><span>The public docs page ships with its own brand assets under <code>docs/assets</code>.</span></div>
+          <div class="signal"><strong>Online streaming</strong><span>Teleoperation targets enter an SDK-owned fixed-rate joint stream instead of direct app-side setpoint writes.</span></div>
         </div>
 
         <section id="install">
@@ -1300,6 +1300,25 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
         duration=2.0,
     )
     print(arm.get_joint_positions())</code></pre>
+          <h3>Online streaming</h3>
+          <pre><code>from soarm_sdk import SOARM
+
+with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
+    stream = arm.start_joint_stream(output_hz=200, target_timeout_s=0.15)
+    try:
+        stream.update_target({
+            "shoulder_pan": 0.0,
+            "shoulder_lift": -0.35,
+            "elbow_flex": 0.65,
+        })
+        print(stream.snapshot())
+    finally:
+        stream.stop()</code></pre>
+          <p>
+            <code>stream_joints()</code> remains a one-shot setpoint write for simple caller-driven streams.
+            <code>start_joint_stream()</code> is the long-lived online controller for teleoperation, with latest-target overwrite semantics,
+            fixed-rate output, velocity/acceleration limiting, and timeout hold behavior.
+          </p>
           <h3>Demonstration helpers</h3>
           <pre><code>from soarm_sdk import SOARM, record_demonstration, replay_demonstration
 
@@ -1330,7 +1349,7 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
               </thead>
               <tbody>
                 <tr><td>Trajectory input</td><td>30 Hz</td><td>High-level targets from policy, user input, or planner.</td></tr>
-                <tr><td>Controller interpolation</td><td>200 Hz</td><td>Convert targets into regular setpoints.</td></tr>
+                <tr><td>Controller output</td><td>200 Hz</td><td>Convert online stream targets or timed trajectories into regular setpoints.</td></tr>
                 <tr><td>Feedback sampling</td><td>100 Hz</td><td>Read and cache real joint state.</td></tr>
                 <tr><td>Web state sync</td><td>30 Hz</td><td>Send cached state to the browser.</td></tr>
                 <tr><td>Web rendering</td><td>60 Hz</td><td>Update the visualization.</td></tr>
@@ -1391,7 +1410,7 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
             <div class="layer"><strong>Teaching</strong><span><code>soarm_sdk.demonstration</code> owns demonstration JSON data, validation, recording, and replay.</span></div>
             <div class="layer"><strong>SDK facade</strong><span><code>soarm_sdk.arm.SOARM</code> exposes the user-facing Python API.</span></div>
             <div class="layer"><strong>Robot domain</strong><span><code>diagnostics</code>, <code>calibration</code>, <code>kinematics</code>, <code>motion</code>, and <code>safety</code></span></div>
-            <div class="layer"><strong>Motion and safety</strong><span><code>motion</code> and <code>safety</code> check limits, voltage, step size, and trajectory feasibility.</span></div>
+            <div class="layer"><strong>Motion and safety</strong><span><code>motion</code> and <code>safety</code> own point-to-point moves, one-shot setpoints, online streams, timed replay, and safety checks.</span></div>
             <div class="layer"><strong>Hardware bus</strong><span><code>soarm_sdk.hardware</code> owns register I/O, units, torque, modes, PID, and motor profile writes.</span></div>
             <div class="layer"><strong>Data and config</strong><span><code>soarm_sdk.model</code> and <code>soarm_sdk.config</code> define dataclasses, YAML schema, and split-config persistence.</span></div>
           </div>
@@ -1401,6 +1420,7 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
           <ul>
             <li><code>ServoBus</code> caches sync readers and writes the Feetech seven-byte position command block that starts at <code>Acceleration</code>.</li>
             <li><code>SafetyGuard</code> and <code>safety.limits</code> centralize soft-limit, step, voltage, velocity, acceleration, and minimum-duration checks.</li>
+            <li><code>JointStreamingController</code> writes only when its output reference advances; reached or stale targets hold without redundant bus writes.</li>
             <li><code>SOARMConfig.save()</code> preserves split config files when saving back to <code>configs/soarm-sdk.yaml</code>.</li>
             <li><code>soarm_sdk.motor_profile</code> and <code>soarm_sdk.workflows</code> are compatibility re-export modules; new internal code should use <code>hardware.motor_profile</code> and <code>application.workflows</code>.</li>
           </ul>
@@ -1409,13 +1429,14 @@ with SOARM.from_config("configs/soarm-sdk.yaml") as arm:
         <section id="validation">
           <h2>Development And Validation</h2>
           <p>Use mock checks before touching hardware:</p>
-          <pre><code>conda run -n soarm-sdk python -m compileall src/soarm_sdk
+          <pre><code>PYTHONPYCACHEPREFIX=/private/tmp/soarm-sdk-pycache conda run -n soarm-sdk python -m compileall src tests
+conda run -n soarm-sdk python -m unittest discover -s tests -v
 conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock
 conda run -n soarm-sdk soarm-sdk fk --config configs/soarm-sdk.yaml shoulder_lift=-0.3 elbow_flex=0.5
 conda run -n soarm-sdk soarm-sdk ik --config configs/soarm-sdk.yaml 0.42 0.0 0.20
 conda run -n soarm-sdk soarm-sdk record-demo /tmp/soarm-demo.json --config configs/soarm-sdk.yaml --mock --duration 1
 conda run -n soarm-sdk soarm-sdk replay-demo /tmp/soarm-demo.json --config configs/soarm-sdk.yaml --dry-run</code></pre>
-          <p>The repository currently has no dedicated unit-test suite, so compile checks and mock CLI paths are the lightweight regression baseline.</p>
+          <p>Focused unit tests cover online streaming behavior. Compile checks and mock CLI paths remain the lightweight regression baseline for broader SDK flows.</p>
           <p>When changing code, keep these boundaries intact:</p>
           <ul>
             <li><code>ServoBus</code> owns register I/O only.</li>

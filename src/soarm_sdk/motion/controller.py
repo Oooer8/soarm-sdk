@@ -137,6 +137,19 @@ class MotionController:
         if positions:
             self.bus.write_positions(positions)
 
+    def write_joint_setpoint(
+        self,
+        positions_rad: Mapping[str, float],
+        *,
+        joint_names: set[str] | None = None,
+    ) -> None:
+        """Write one already-validated joint setpoint.
+
+        This is the shared low-level output path for controllers that own their
+        own timing and safety semantics, such as the online streaming loop.
+        """
+        self._write_joint_positions(positions_rad, joint_names=joint_names)
+
     def _write_joint_positions(
         self,
         positions_rad: Mapping[str, float],

@@ -25,7 +25,13 @@ from .errors import (
 )
 from .kinematics import forward_kinematics, home_positions, solve_position_ik
 from .model import ArmState, JointConfig, JointState, Pose
-from .motion import InterpolationMode, TimedJointTrajectory, TrajectoryPoint
+from .motion import (
+    InterpolationMode,
+    JointStreamingController,
+    JointStreamSnapshot,
+    TimedJointTrajectory,
+    TrajectoryPoint,
+)
 
 __all__ = [
     "ArmSettings",
@@ -40,6 +46,8 @@ __all__ = [
     "EmergencyStopActive",
     "HardwareError",
     "JointConfig",
+    "JointStreamingController",
+    "JointStreamSnapshot",
     "JointState",
     "LimitViolation",
     "MotionError",

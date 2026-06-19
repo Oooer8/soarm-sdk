@@ -20,7 +20,13 @@ from .hardware.motor_profile import (
     apply_motor_profile,
     motor_profile_requires_torque_disabled,
 )
-from .motion import InterpolationMode, MotionController, TimedJointTrajectory, TrajectoryPoint
+from .motion import (
+    InterpolationMode,
+    JointStreamingController,
+    MotionController,
+    TimedJointTrajectory,
+    TrajectoryPoint,
+)
 from .safety import SafetyGuard
 from .testing import MockBus
 
@@ -222,6 +228,24 @@ class SOARM:
         if not self._enabled:
             self.enable()
         self.motion.stream_joints(targets, dt=dt)
+
+    def start_joint_stream(
+        self,
+        *,
+        output_hz: float | None = None,
+        target_timeout_s: float = 0.15,
+        joint_names: list[str] | None = None,
+    ) -> JointStreamingController:
+        if not self._enabled:
+            self.enable()
+        return JointStreamingController(
+            config=self.config,
+            motion=self.motion,
+            safety=self.safety,
+            output_hz=output_hz,
+            target_timeout_s=target_timeout_s,
+            joint_names=joint_names,
+        ).start()
 
     def follow_joint_trajectory(
         self,

@@ -11,7 +11,7 @@ scripts, tests, and future application surfaces.
 - Read-only diagnostics for communication, position, soft limits, and voltage
 - Interactive calibration with zero capture and one-pass all-joint sweep
 - Joint-space safety checks for limits, step size, velocity, acceleration, and voltage
-- Position motion, streaming setpoints, and timed trajectory replay
+- Position motion, one-shot streaming setpoints, online joint streaming, and timed trajectory replay
 - Forward/inverse kinematics helpers for the bundled SO-ARM101-style geometry
 - Demonstration JSON recording, validation, windowing, and replay
 - Local Web console for setup, status, calibration, URDF visualization, feedback, and slider control
@@ -86,6 +86,25 @@ CLI/Web/Python -> SOARM -> MotionController
                          -> ServoBus.write_positions() writes Feetech position command blocks
 ```
 
+Motion APIs:
+
+```text
+move_joints(wait=True)
+  -> point-to-point move with rest-to-rest feasibility checks
+
+stream_joints(targets, dt=...)
+  -> one-shot setpoint write for simple caller-driven streams
+
+start_joint_stream()
+  -> long-lived online controller
+  -> latest-target overwrite slot
+  -> fixed-rate velocity/acceleration-limited output
+  -> timeout hold when target updates stop
+
+follow_joint_trajectory()
+  -> fixed-rate replay of an already-timestamped trajectory
+```
+
 Teaching replay:
 
 ```text
@@ -127,6 +146,9 @@ one fully merged YAML file.
 - `ServoBus.write_positions()` writes the Feetech STS/SMS seven-byte position
   command block starting at `Acceleration`, because writing only `Goal_Position`
   does not reliably trigger STS3215 movement.
+- `JointStreamingController` only writes when its output reference advances.
+  Once a target is reached or target updates time out, it holds locally instead
+  of sending redundant bus writes.
 - Web feedback reads are sampled in a background thread and cached; voltage is
   refreshed at a slower cadence than position.
 - Trajectory replay converts sparse samples into fixed-rate setpoints once before
@@ -160,11 +182,12 @@ python -m soarm_sdk.cli status --config configs/soarm-sdk.yaml --mock
 Use the project conda environment for local validation:
 
 ```bash
-conda run -n soarm-sdk python -m compileall src/soarm_sdk
+PYTHONPYCACHEPREFIX=/private/tmp/soarm-sdk-pycache conda run -n soarm-sdk python -m compileall src tests
+conda run -n soarm-sdk python -m unittest discover -s tests -v
 conda run -n soarm-sdk soarm-sdk status --config configs/soarm-sdk.yaml --mock
 conda run -n soarm-sdk soarm-sdk fk --config configs/soarm-sdk.yaml shoulder_lift=-0.3 elbow_flex=0.5
 conda run -n soarm-sdk soarm-sdk ik --config configs/soarm-sdk.yaml 0.42 0.0 0.20
 ```
 
-There is currently no dedicated unit-test suite in the repository, so CLI mock
-paths and compile checks are the main lightweight regression checks.
+Focused unit tests cover the online streaming controller. CLI mock paths and
+compile checks remain the broader lightweight regression checks.
