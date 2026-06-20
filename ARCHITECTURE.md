@@ -102,11 +102,10 @@ start_joint_stream(mode="arrival")
   -> fixed-rate velocity/acceleration-limited output that approaches a static target and brakes
   -> default for conservative callers
 
-start_joint_stream(mode="tracking")
-  -> long-lived online controller for teleoperation
-  -> estimates target velocity from overwrite-latest updates
-  -> target-velocity feedforward plus position-error feedback
-  -> velocity/acceleration limits and timeout hold still apply
+start_joint_stream(mode="direct")
+  -> long-lived online controller for low-latency teleoperation
+  -> writes the latest target directly on each output tick
+  -> joint limits and timeout hold still apply
 
 follow_joint_trajectory()
   -> fixed-rate replay of an already-timestamped trajectory

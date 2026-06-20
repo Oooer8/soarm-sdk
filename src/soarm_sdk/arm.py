@@ -23,6 +23,7 @@ from .hardware.motor_profile import (
 )
 from .motion import (
     InterpolationMode,
+    JointStreamMode,
     JointStreamingController,
     MotionController,
     TimedJointTrajectory,
@@ -244,9 +245,7 @@ class SOARM:
         output_hz: float | None = None,
         target_timeout_s: float = 0.15,
         joint_names: list[str] | None = None,
-        mode: str = "arrival",
-        tracking_kp: float = 8.0,
-        tracking_feedforward: float = 1.0,
+        mode: JointStreamMode = "arrival",
     ) -> JointStreamingController:
         if not self._enabled:
             self.enable()
@@ -258,8 +257,6 @@ class SOARM:
             target_timeout_s=target_timeout_s,
             joint_names=joint_names,
             mode=mode,
-            tracking_kp=tracking_kp,
-            tracking_feedforward=tracking_feedforward,
         ).start()
 
     def follow_joint_trajectory(

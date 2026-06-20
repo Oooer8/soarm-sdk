@@ -47,7 +47,7 @@ class MotionController:
         current pose to the target at ``arm.control_hz`` and returns after all
         setpoints are written.
 
-        ``wait=False`` is the legacy streaming path: it validates the command
+        ``wait=False`` is the single-setpoint path: it validates the command
         using ``duration`` as the caller's intended command interval, writes one
         setpoint, and returns immediately.
         """

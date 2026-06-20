@@ -4,7 +4,14 @@ from dataclasses import replace
 import time
 import unittest
 
-from soarm_sdk import ConfigurationError, LimitViolation, SOARM, SOARMConfig, default_config_path
+from soarm_sdk import (
+    ConfigurationError,
+    LimitViolation,
+    MotionError,
+    SOARM,
+    SOARMConfig,
+    default_config_path,
+)
 
 
 def _wait_for(predicate, *, timeout: float = 1.0) -> None:
@@ -93,28 +100,13 @@ class JointStreamingControllerTest(unittest.TestCase):
             stream.stop()
             arm.disconnect()
 
-    def test_tracking_mode_uses_target_velocity_feedforward(self) -> None:
+    def test_rejects_removed_tracking_mode(self) -> None:
         arm = SOARM.mock()
         arm.connect()
-        stream = arm.start_joint_stream(
-            output_hz=100,
-            target_timeout_s=0.5,
-            mode="tracking",
-            tracking_kp=0.0,
-        )
         try:
-            stream.update_target({"shoulder_pan": 0.0})
-            time.sleep(0.05)
-            stream.update_target({"shoulder_pan": 0.2})
-            _wait_for(lambda: stream.snapshot().writes >= 3)
-            snapshot = stream.snapshot()
-            self.assertEqual(snapshot.mode, "tracking")
-            self.assertGreater(snapshot.target_velocities["shoulder_pan"], 0.0)
-            self.assertGreater(snapshot.velocities["shoulder_pan"], 0.0)
-            self.assertGreater(snapshot.output["shoulder_pan"], 0.0)
-            self.assertIsNone(snapshot.error)
+            with self.assertRaises(MotionError):
+                arm.start_joint_stream(mode="tracking")
         finally:
-            stream.stop()
             arm.disconnect()
 
     def test_direct_mode_outputs_latest_target_without_soft_motion_lag(self) -> None:
